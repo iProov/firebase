@@ -1,0 +1,27 @@
+name: iproov_firebase
+description: Authenticate with Firebase using iProov
+version: 0.0.1
+homepage: 'https://www.iproov.com'
+repository: 'https://github.com/iProov/firebase-extension/tree/main/sdk/flutter'
+
+environment:
+  sdk: '>=3.1.2 <4.0.0'
+  flutter: ">=1.17.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # iProov Flutter
+  iproov_flutter: ^4.0.1
+
+  # Firebase
+  firebase_auth: ^4.16.0
+  cloud_functions: ^4.5.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+
+flutter:

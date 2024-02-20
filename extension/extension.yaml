@@ -1,0 +1,73 @@
+name: auth-iproov
+version: 0.1.0
+specVersion: v1beta
+displayName: Authenticate with iProov
+description: >-
+  Use iProov Biometrics to create accounts and sign in to Firebase Auth.
+license: Apache-2.0
+sourceUrl: https://github.com/iProov/firebase/tree/master/extension
+billingRequired: true
+icon: icon.png
+tags: [iproov, authentication, auth, biometrics, liveness, face, scan, identity]
+
+author:
+  authorName: iProov
+  email: support@iproov.com
+  url: https://iproov.com
+
+contributors:
+  - authorName: Jonathan Ellis
+    url: https://github.com/jonathanellis
+  - authorName: Josh Everett
+    url: https://github.com/MrJoshE
+
+apis:
+  - apiName: iamcredentials.googleapis.com
+    reason: Create signed authentication tokens.
+
+resources:
+  - name: getToken
+    type: firebaseextensions.v1beta.function
+    description: >-
+      Generate a token for enrolling a new user or verifying an existing user.
+    properties:
+      httpsTrigger: {}
+      runtime: nodejs18
+  
+  - name: validate
+    type: firebaseextensions.v1beta.function
+    description: >-
+      Validate a token once the iProov face scan has been completed to get the auth token for the user.
+    properties:
+      httpsTrigger: {}
+      runtime: nodejs18
+
+params:
+  - param: REGION
+    label: iProov Region
+    description: >-
+      The iProov region where your iProov data will be hosted. This cannot be changed later.
+    type: select
+    immutable: true
+    required: true
+    options:
+      - label: Europe
+        value: eu
+      - label: North America
+        value: us
+      - label: Singapore
+        value: sg
+      - label: Australia
+        value: au
+  - param: API_KEY
+    label: iProov API Key
+    required: false
+    description: >-
+      Your iProov API Key. Leave blank to use the sandbox environment.
+    type: secret
+  - param: SECRET
+    label: iProov API Secret
+    required: false
+    description: >-
+      Your iProov API secret. Leave blank to use the sandbox environment.
+    type: secret

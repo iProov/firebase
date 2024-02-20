@@ -1,0 +1,33 @@
+{
+  "name": "iProovFirebase",
+  "version": "0.1.0",
+  "summary": "A short description of iProovFirebase.",
+  "description": "TODO: Add long description of the pod here.",
+  "homepage": "https://github.com/Jonathan Ellis/iProovFirebase",
+  "license": {
+    "type": "MIT",
+    "file": "LICENSE"
+  },
+  "authors": {
+    "Jonathan Ellis": "jonathan.ellis@iproov.com"
+  },
+  "source": {
+    "git": "https://github.com/Jonathan Ellis/iProovFirebase.git",
+    "tag": "0.1.0"
+  },
+  "platforms": {
+    "ios": "12.0"
+  },
+  "source_files": "iProovFirebase/Classes/**/*",
+  "dependencies": {
+    "iProov": [
+      "~> 11.0.0"
+    ],
+    "Firebase/Functions": [
+
+    ],
+    "Firebase/Auth": [
+
+    ]
+  }
+}

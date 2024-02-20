@@ -1,0 +1,19 @@
+{
+  "emulators": {
+    "functions": {
+      "host": "0.0.0.0",
+      "port": 5001
+    },
+    "ui": {
+      "enabled": true
+    },
+    "singleProjectMode": true,
+    "auth": {
+      "host": "0.0.0.0",
+      "port": 9099
+    }
+  },
+  "extensions": {
+    "auth-iproov": ".."
+  }
+}
