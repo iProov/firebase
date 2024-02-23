@@ -1,5 +1,5 @@
 name: auth-iproov
-version: 0.1.0
+version: 0.1.1
 specVersion: v1beta
 displayName: Authenticate with iProov
 description: >-
@@ -24,6 +24,10 @@ contributors:
 apis:
   - apiName: iamcredentials.googleapis.com
     reason: Create signed authentication tokens.
+
+externalServices:
+  - name: iProov
+    pricingUri: https://www.iproov.com
 
 resources:
   - name: getToken
