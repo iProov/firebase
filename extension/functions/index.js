@@ -114,6 +114,7 @@ async function signJwt(payload) {
         sub: serviceAccount,
         region: process.env.REGION,
         aud: GATEWAY_URL,
+        exp: Math.floor(Date.now() / 1000) + 60,
         ...payload
       })
     },
