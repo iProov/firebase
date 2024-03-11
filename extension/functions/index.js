@@ -67,7 +67,9 @@ export const validate = functions.https.onCall(async (data, context) => {
 
   if (result.passed) {
     try {
-      const firebaseToken = await getAuth().createCustomToken(data.userId);
+      const firebaseToken = await getAuth().createCustomToken(data.userId, {
+        assuranceType: result.assuranceType,
+      });
       return firebaseToken;
     } catch (error) {
       handleError(error);
