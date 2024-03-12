@@ -9,6 +9,7 @@ const iamcredentials = google.iamcredentials('v1');
 const GATEWAY_URL = process.env.GATEWAY_URL ?? 'https://europe-west2-iproov-firebase-gateway.cloudfunctions.net/firebase-gateway';
 const PROJECT_ID = JSON.parse(process.env.FIREBASE_CONFIG).projectId;
 const INSTANCE_ID = process.env.EXT_INSTANCE_ID;
+const ASSURANCE_TYPES = process.env.ASSURANCE_TYPES.split(',');
 
 admin.initializeApp();
 
@@ -17,7 +18,7 @@ export const getToken = functions.https.onCall(async (data, context) => {
   const schema = Joi.object({
     userId: Joi.string().required(),
     claimType: Joi.string().valid('enrol', 'verify').required(),
-    assuranceType: Joi.string().valid('genuine_presence', 'liveness').optional(), // GPA is the default
+    assuranceType: Joi.string().valid(...ASSURANCE_TYPES).required(),
   });
 
   const { error } = schema.validate(data);
@@ -30,7 +31,7 @@ export const getToken = functions.https.onCall(async (data, context) => {
       method: 'token',
       claimType: data.claimType,
       userId: data.userId,
-      assuranceType: data.assuranceType ?? 'genuine_presence',
+      assuranceType: data.assuranceType,
     });
 
     return result;
