@@ -63,6 +63,18 @@ params:
         value: sg
       - label: Australia
         value: au
+  - param: ASSURANCE_TYPES
+    label: iProov Assurance Type(s)
+    required: true
+    description: >-
+      The iProov assurance type(s) to allow for the iProov face scan.
+      Note that if you select more than one assurance type, they can be used interchangeably for account creation and sign-in without any restriction.
+    type: multiSelect
+    options:
+      - label: Genuine Presence Assurance
+        value: genuine_presence
+      - label: Liveness Assurance
+        value: liveness
   - param: API_KEY
     label: iProov API Key
     required: false
@@ -75,15 +87,3 @@ params:
     description: >-
       Your iProov API secret. Leave blank to use the sandbox environment.
     type: secret
-  - param: ASSURANCE_TYPES
-    label: iProov Assurance Type(s)
-    required: true
-    description: >-
-      The iProov assurance type(s) to allow for the iProov face scan.
-      Note that if you select more than one assurance type, they can be used interchangeably without any restriction.
-    type: multiSelect
-    options:
-      - label: Dynamic Liveness
-        value: genuine_presence
-      - label: Express Liveness
-        value: liveness

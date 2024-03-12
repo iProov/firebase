@@ -91,7 +91,9 @@ extension Auth {
             let region = response["region"] as! String
             let token = response["token"] as! String
             
-            IProov.launch(streamingURL: URL(string: "wss://\(region).rp.secure.iproov.me/ws")!, token: token, options: options ?? Options()) { status in
+            IProov.launch(streamingURL: URL(string: "wss://\(region).rp.secure.iproov.me/ws")!,
+                          token: token,
+                          options: options ?? Options()) { status in
                 
                 switch status {
                 case .connecting:

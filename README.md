@@ -13,7 +13,7 @@ It consists of:
 
 Follow the instructions [here](https://github.com/iProov/firebase/blob/master/extension/PREINSTALL.md).
 
-## Installing locally on emulator
+## Installing locally on the Firebase Emulator
 
 The extension can be emulated locally for development & testing.
 

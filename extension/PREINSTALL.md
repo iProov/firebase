@@ -34,25 +34,7 @@ You will have your own API key designated to your own dedicated Service Provider
    firebase ext:install iproov/auth-iproov --project=[your-project-id]
    ```
 
-2. After installation is complete, you need to manually grant the extension's service account the necessary permission to generate signed authentication tokens:
-
-   i. [Open the Google Cloud Console IAM Admin page](https://console.cloud.google.com/iam-admin/iam).
-
-   ii. Press the blue "GRANT ACCESS" button:
-
-   ![Grant Access button](doc/grant-access-button.png)
-
-   iii. In the side panel, under the "Add principals" section, enter the email address of the service account for your instance of the Firebase Extension - this should auto-complete for you and typically has the format `ext-auth-iproov@{project-id}.iam.gserviceaccount.com`.
-
-   iv. Under the "Assign Roles" section, find the role "Service Account Token Creator".
-
-   The completed panel should look like this:
-
-   ![Completed side panel](doc/iam-setup.png)
-
-   v. Click "Save".
-
-   iv. Wait a few minutes for the changes to fully propagate.
+2. After installation is complete, you need to manually grant the extension's service account the necessary permission to generate signed authentication tokens. See the [post-install instructions](POSTINSTALL.md) for further details.
 
 3. [Install the relevant iProov Firebase SDK for your mobile app](https://github.com/iProov/firebase/tree/master/sdk) (iOS, Android or Flutter) and follow the documentation to create and sign-in users.
 
