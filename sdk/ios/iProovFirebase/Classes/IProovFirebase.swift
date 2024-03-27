@@ -42,7 +42,9 @@ public final class IProovAuth {
          region: String = "us-central1",
          extensionID: String = "auth-iproov") {
         
-        let app = (app ?? FirebaseApp.app())!
+        guard let app = app else {
+            fatalError("No Firebase app configured")
+        }
         
         self.auth = Auth.auth(app: app)
         self.functions = Functions.functions(app: app, region: region)
