@@ -24,10 +24,10 @@ class ViewController: UIViewController {
         let options = Options()
         options.title = "Firebase Auth Example"
         
-        Auth.auth().createUser(withIProovUserID: userIDTextField.text!,
-                               assuranceType: .liveness,
-                               options: options,
-                               progressCallback: { progress in
+        Auth.iProov().createUser(withUserID: userIDTextField.text!,
+                                 assuranceType: .liveness,
+                                 options: options,
+                                 progressCallback: { progress in
             print(progress)
         }) { result, error in
             
@@ -48,10 +48,10 @@ class ViewController: UIViewController {
         let options = Options()
         options.title = "Firebase Auth Example"
         
-        Auth.auth().signIn(withIProovUserID: userIDTextField.text!,
-                           assuranceType: .liveness,
-                           options: options,
-                           progressCallback: { progress in
+        Auth.iProov().signIn(withUserID: userIDTextField.text!,
+                             assuranceType: .liveness,
+                             options: options,
+                             progressCallback: { progress in
             print(progress)
         }) { result, error in
             if let error = error {
