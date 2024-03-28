@@ -3,6 +3,7 @@ package com.iproov.firebase.example_app
 
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
@@ -22,9 +23,8 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
-import com.iproov.firebase.createIProovUser
 import com.iproov.firebase.example_app.ui.theme.Iproov_firebaseTheme
-import com.iproov.firebase.signInWithIProov
+import com.iproov.firebase.iProov
 import com.iproov.sdk.IProov
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -56,6 +56,7 @@ class MainActivity : ComponentActivity() {
                 iProovEvents.collect { sessionState: IProov.IProovSessionState? ->
                     sessionState?.state?.let { state ->
                         withContext(Dispatchers.Main) {
+                            Log.i("iProov", "State: $state")
                             setState(pageState.copy(isLoading = !state.isFinal))
                         }
                     }
@@ -87,13 +88,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun register() = CoroutineScope(Dispatchers.IO).launch {
-        FirebaseAuth.getInstance()
-            .createIProovUser(applicationContext, "johnsmith@example.com", iProovEvents);
-    }
-
-    private fun login() = CoroutineScope(Dispatchers.IO).launch {
-        FirebaseAuth.getInstance()
-            .signInWithIProov(applicationContext, "johnsmith@example.com", iProovEvents);
+        FirebaseAuth.getInstance().iProov().createUser(applicationContext, "johnsmith@example.com", iProovEvents);
     }
 
     @Composable
@@ -109,7 +104,6 @@ class MainActivity : ComponentActivity() {
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-
                     if (state.isLoading) {
                         Text("Loading...", textAlign = TextAlign.Center)
                     } else {
