@@ -27,45 +27,42 @@ enum AssuranceType {
 
 enum ClaimType { enrol, verify }
 
-const _defaultExtensionId = 'auth-iproov';
-
 extension IProovFirebaseAuthExtension on FirebaseAuth {
-  Stream<IProovEvent> signInWithIProov({
+  IProovFirebaseAuth iProov({String? region, String? extensionId}) =>
+      IProovFirebaseAuth._(auth: this, extensionId: extensionId, region: region);
+}
+
+class IProovFirebaseAuth {
+  static const _defaultExtensionId = 'auth-iproov';
+  final String extensionId;
+  final FirebaseFunctions functions;
+  final FirebaseAuth auth;
+
+  IProovFirebaseAuth._({String? extensionId, required this.auth, String? region})
+      : functions = FirebaseFunctions.instanceFor(app: auth.app, region: region),
+        extensionId = extensionId ?? _defaultExtensionId;
+
+  Stream<IProovEvent> signIn({
     required String userId,
     AssuranceType assuranceType = AssuranceType.genuinePresence,
-    Options iproovOptions = const Options(),
-    String extensionId = _defaultExtensionId,
+    Options options = const Options(),
   }) =>
-      _doIProov(
-        userId,
-        assuranceType,
-        ClaimType.verify,
-        iproovOptions,
-        extensionId,
-      );
+      _doIProov(userId, assuranceType, ClaimType.verify, options);
 
-  Stream<IProovEvent> createIProovUser({
+  Stream<IProovEvent> createUser({
     String? userId,
     AssuranceType assuranceType = AssuranceType.genuinePresence,
-    Options iproovOptions = const Options(),
-    String extensionId = _defaultExtensionId,
+    Options options = const Options(),
   }) =>
-      _doIProov(
-        userId,
-        assuranceType,
-        ClaimType.enrol,
-        iproovOptions,
-        extensionId,
-      );
+      _doIProov(userId, assuranceType, ClaimType.enrol, options);
 
   Stream<IProovEvent> _doIProov(
     String? userId,
     AssuranceType assuranceType,
     ClaimType claimType,
     Options options,
-    String extensionId,
   ) async* {
-    final response = await FirebaseFunctions.instance.httpsCallable('ext-$extensionId-getToken')({
+    final response = await functions.httpsCallable('ext-$extensionId-getToken')({
       'userId': userId,
       'claimType': claimType.name,
       'assuranceType': assuranceType.value,
@@ -85,24 +82,18 @@ extension IProovFirebaseAuthExtension on FirebaseAuth {
     await for (IProovEvent event in stream) {
       yield event;
       if (event is IProovEventSuccess) {
-        final credential = await _validateIProovUser(
+        final credential = await _validateUser(
           userId: userId,
           token: token,
           claimType: claimType,
-          extensionId: extensionId,
         );
         yield IProovEventAuthenticationSuccess(credential);
       }
     }
   }
 
-  Future<UserCredential> _validateIProovUser({
-    String? userId,
-    required String token,
-    required ClaimType claimType,
-    required String extensionId,
-  }) async {
-    final response = await FirebaseFunctions.instance.httpsCallable('ext-$extensionId-validate')(
+  Future<UserCredential> _validateUser({String? userId, required String token, required ClaimType claimType}) async {
+    final response = await functions.httpsCallable('ext-$extensionId-validate')(
       {
         'userId': userId,
         'token': token,
@@ -111,6 +102,6 @@ extension IProovFirebaseAuthExtension on FirebaseAuth {
     );
 
     final jwt = response.data as String;
-    return signInWithCustomToken(jwt);
+    return auth.signInWithCustomToken(jwt);
   }
 }
