@@ -18,7 +18,7 @@ private const val defaultExtensionId = "auth-iproov"
 
 enum class AssuranceType(val value: String) {
     LIVENESS("liveness"),
-    GENUINE_PRESENCE("genuine_presence");
+    GENUINE_PRESENCE("genuine_presence")
 }
 
 enum class ClaimType(val value: String) {
@@ -26,13 +26,25 @@ enum class ClaimType(val value: String) {
     VERIFY("verify"),
 }
 
-fun FirebaseAuth.iProov(region: String? = null, extensionId: String? = null)= IProovFirebaseAuth(this, extensionId = extensionId ?: defaultExtensionId, region = region)
+fun FirebaseAuth.iProov(region: String? = null, extensionId: String? = null) =
+    IProovFirebaseAuth(this, extensionId = extensionId ?: defaultExtensionId, region = region)
 
-class IProovFirebaseAuth(private val functions: FirebaseFunctions, private val auth: FirebaseAuth, private val extensionId: String){
+class IProovFirebaseAuth(
+    private val functions: FirebaseFunctions,
+    private val auth: FirebaseAuth,
+    private val extensionId: String
+) {
 
-    constructor(auth: FirebaseAuth, extensionId: String? = null, region: String? = null) :
-            this(FirebaseFunctions.getInstance(auth.app, region ?: defaultRegion ), auth, extensionId = extensionId ?: defaultExtensionId,)
-    
+    constructor(
+        auth: FirebaseAuth,
+        extensionId: String? = null,
+        region: String? = null
+    ) : this(
+        FirebaseFunctions.getInstance(auth.app, region ?: defaultRegion),
+        auth,
+        extensionId = extensionId ?: defaultExtensionId
+    )
+
     suspend fun createUser(
         applicationContext: Context,
         userId: String,
@@ -73,14 +85,17 @@ class IProovFirebaseAuth(private val functions: FirebaseFunctions, private val a
         claimType: ClaimType,
     ): Task<AuthResult> {
 
-        val response = functions
-            .getHttpsCallable("ext-${extensionId}-validate").call(
-                mapOf(
-                    "userId" to userId,
-                    "token" to token,
-                    "claimType" to claimType.value,
+        val response =
+            functions
+                .getHttpsCallable("ext-${extensionId}-validate")
+                .call(
+                    mapOf(
+                        "userId" to userId,
+                        "token" to token,
+                        "claimType" to claimType.value,
+                    )
                 )
-            ).await()
+                .await()
 
         val jwt = response.data as String
         return auth.signInWithCustomToken(jwt)
@@ -94,7 +109,8 @@ class IProovFirebaseAuth(private val functions: FirebaseFunctions, private val a
         claimType: ClaimType,
         iproovOptions: IProov.Options,
     ) {
-        val response = functions
+        val response =
+            functions
                 .getHttpsCallable("ext-${extensionId}-getToken")
                 .call(
                     mapOf(
@@ -102,7 +118,8 @@ class IProovFirebaseAuth(private val functions: FirebaseFunctions, private val a
                         "claimType" to claimType.value,
                         "userId" to userId,
                     )
-                ).await()
+                )
+                .await()
 
         val data = response.data as Map<*, *>
 
@@ -114,20 +131,21 @@ class IProovFirebaseAuth(private val functions: FirebaseFunctions, private val a
             applicationContext,
             "wss://$region.rp.secure.iproov.me/ws",
             token,
-            iproovOptions,
+            iproovOptions
         )
 
-        val job = CoroutineScope(Dispatchers.Default).launch {
-            iProov.sessionsStates.collect { sessionState: IProov.IProovSessionState? ->
-                sessionState?.state.let {
-                    iProovEvents?.emit(sessionState)
-                    if (it is IProov.IProovState.Success) {
-                        validate(userId, token, claimType).await()
-                        this.cancel()
+        val job =
+            CoroutineScope(Dispatchers.Default).launch {
+                iProov.sessionsStates.collect { sessionState: IProov.IProovSessionState? ->
+                    sessionState?.state.let {
+                        iProovEvents?.emit(sessionState)
+                        if (it is IProov.IProovState.Success) {
+                            validate(userId, token, claimType).await()
+                            this.cancel()
+                        }
                     }
                 }
             }
-        }
         job.join()
     }
 
@@ -135,5 +153,4 @@ class IProovFirebaseAuth(private val functions: FirebaseFunctions, private val a
         private const val defaultExtensionId = "auth-iproov"
         private const val defaultRegion = "us-central1"
     }
-
 }
