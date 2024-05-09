@@ -76,10 +76,7 @@ class _HomePageState extends State<HomePage> {
     setState(() => isLoading = true);
 
     final userId = const UuidV4().generate();
-    final stream = FirebaseAuth.instance.iProov(region: 'europe-central2').createUser(
-          userId: userId,
-          assuranceType: AssuranceType.genuinePresence,
-        );
+    final stream = FirebaseAuth.instance.iProov().createUser(userId: userId);
 
     return _handleIProov(stream);
   }

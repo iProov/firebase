@@ -28,20 +28,20 @@ The iProov Firebase SDK extends Firebase Auth with support for creating and sign
 To register an iProov user using Genuine Presence Assurance with the default settings:
 
 ```dart
-final stream = FirebaseAuth.instance.createIProovUser(userId: 'testuser@example.com');
+final stream = FirebaseAuth.instance.iProov().createUser(userId: 'testuser@example.com');
 
 await for (IProovEvent event in stream) {
     print(event); 
     if (event is IProovEventAuthenticationSuccess ){
-        print('User has authenticated ${event.user}');
+        print('User has registered ${event.user}');
     }
 }
 ```
 
-To sign in an existing user, simply use Auth.auth().signInIProovUser() and pass their userID:
+To sign in an existing user, simply use FirebaseAuth.instance.iProov().signIn() and pass their userID:
 
 ```dart
-final stream = FirebaseAuth.instance.signInWithIProov(userId: 'testuser@example.com');
+final stream = FirebaseAuth.instance.iProov().signIn(userId: 'testuser@example.com');
 
 await for (IProovEvent event in stream) {
     print(event); 
@@ -53,22 +53,26 @@ await for (IProovEvent event in stream) {
 
 ### Advanced example
 
-Once you've got up and running with the basic example, you can now pass additional parameters to createIProovUser() and signInIProovUser():
+Once you've got up and running with the basic example, you can now pass additional parameters to createUser() and signIn():
 
 - `assuranceType` - specify the assurance type (Genuine Presence Assurance or Liveness Assurance)
 - `iproovOptions` - customize the [iProov SDK options](https://github.com/iproov/flutter?tab=readme-ov-file#options)
-- `extensionId` - if you have more than one instance of the iProov Extension installed or the extension ID is anything other than `auth-iproov`, you can override it here
 
 Here's an example, creating an iProov user with Liveness Assurance, specifying a custom title for the face scan and listening to the iProov SDK event stream.
 
 ```dart
-FirebaseAuth.instance.createIProovUser(
+FirebaseAuth.instance.iProov().createUser(
     userId: 'iproov-example-user-0001',
     assuranceType: AssuranceType.liveness,
     iproovOptions: const Options(
         title: 'Firebase Auth Example'
     ),
 );
+```
+You can also pass additional parameters to `FirebaseAuth.instance.iProov()` if your extension ID is anything other than `iproov-auth` and/or your extension is installed in a region other than `us-central1`, e.g.:
+
+```dart
+FirebaseAuth.instance.iProov(region: 'europe-west2', extensionId: 'auth-iproov-3bau').signIn(userId: 'testuser@example.com');
 ```
 
 ## Example app
