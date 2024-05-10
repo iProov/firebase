@@ -11,6 +11,43 @@ Before you can use this SDK, you will need to:
 
 Now you can add the iProov Firebase Android SDK to your project.
 
+## Installation
+
+The iProov Firebase Android SDK is provided in Android Library Project (AAR) format as a Maven dependency.
+
+
+1. Open the `build.gradle` file corresponding to the new, or existing, Android Studio project that you want to integrate. Typically, this is the `build.gradle` file for the `app` module.
+
+2. Add maven to the `repositories` section in your `build.gradle` file:
+
+    ```groovy
+    repositories {
+        maven { url 'https://raw.githubusercontent.com/iProov/firebase/master/android/maven/' }
+    }
+    ```
+
+3. Add the SDK version to the `dependencies` section in your `build.gradle` file:
+
+    ```groovy
+    dependencies {
+        implementation('com.iproov.firebase:iproov-firebase:1.0.0')
+    }
+    ```
+
+4. Add support for Java 8 to your `build.gradle` file. Skip this step if Java 8 is enabled:
+
+    ```groovy
+    android {
+        compileOptions {
+            sourceCompatibility JavaVersion.VERSION_1_8
+            targetCompatibility JavaVersion.VERSION_1_8
+        }
+    }
+    ```
+
+5. Build your project
+
+
 ## Usage
 
 ### Basic example
