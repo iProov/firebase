@@ -72,5 +72,4 @@ dependencies {
     implementation(project(":iproov_firebase"))
     implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
     implementation("com.google.firebase:firebase-auth")
-    implementation("com.iproov.sdk:iproov:9.0.3")
 }

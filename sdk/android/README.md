@@ -6,47 +6,28 @@ Before you can use this SDK, you will need to:
 
 - Create a Firebase project in the [Firebase console](https://console.firebase.google.com)
 - Register your app with Firebase
-- Download the `google-services.json` file and add it to your project
-- Add the iProov Firebase Android SDK to your project
+- Download the `google-services.json` file and add it to your app project in the root directory
 
 Now you can add the iProov Firebase Android SDK to your project.
 
 ## Installation
 
-The iProov Firebase Android SDK is provided in Android Library Project (AAR) format as a Maven dependency.
+1. Add the `iproov_firebase` folder to your app project in the root directory.
 
-
-1. Open the `build.gradle` file corresponding to the new, or existing, Android Studio project that you want to integrate. Typically, this is the `build.gradle` file for the `app` module.
-
-2. Add maven to the `repositories` section in your `build.gradle` file:
+2. Add the following to your `settings.gradle` file:
 
     ```groovy
-    repositories {
-        maven { url 'https://raw.githubusercontent.com/iProov/firebase/master/android/maven/' }
-    }
+    include(':iproov_firebase')
     ```
-
-3. Add the SDK version to the `dependencies` section in your `build.gradle` file:
+3. Add the following to your app's `build.gradle`:
 
     ```groovy
     dependencies {
-        implementation('com.iproov.firebase:iproov-firebase:1.0.0')
+        implementation(project(":iproov_firebase"))
     }
     ```
 
-4. Add support for Java 8 to your `build.gradle` file. Skip this step if Java 8 is enabled:
-
-    ```groovy
-    android {
-        compileOptions {
-            sourceCompatibility JavaVersion.VERSION_1_8
-            targetCompatibility JavaVersion.VERSION_1_8
-        }
-    }
-    ```
-
-5. Build your project
-
+4. Build your project
 
 ## Usage
 
@@ -110,7 +91,7 @@ Once you've got up and running with the basic example, you can now pass addition
 to `createUser()` and `signIn()`:
 
 - `assuranceType` - specify the assurance type (Genuine Presence Assurance or Liveness Assurance)
-- `iProovOptions` - customize
+- `iproovOptions` - customize
   any [iProov SDK options](https://github.com/iproov/ios?tab=readme-ov-file#options)
 
 Here's an example of modifying the above createUser function, creating an iProov user with Liveness
@@ -144,8 +125,8 @@ FirebaseAuth.getInstance().iProov(region = "europe-west2", extensionId = "iproov
 In the `example-app` folder, you'll find an example implementation of the iProov Firebase Android
 SDK.
 
-1. Download the google-services.json file from Firebase and add it to the `example-app/` directory.
-2. Open the `example-app` directory in Android Studio.
+1. Download the google-services.json file from Firebase and add it to the `example-app` directory.
+2. Open the `example-app` directory in Android Studio to build and run the project.
 
 ## Further reading
 
