@@ -46,7 +46,7 @@ To sign in an existing user, simply use `Auth.iProov().signIn(withUserID:)` and 
 
 ### Advanced example
 
-Once you've got up and running with the basic example, you can now pass additional parameters to `createUser(withUserID:)` and `signIn(withUserID:)`:
+Once you've got up and running with the basic example, you can now pass additional parameters to `createUser()` and `signIn()`:
 
 - `assuranceType` - specify the assurance type (Genuine Presence Assurance or Liveness Assurance)
 - `options` - customize any [iProov SDK options](https://github.com/iproov/ios?tab=readme-ov-file#options)
