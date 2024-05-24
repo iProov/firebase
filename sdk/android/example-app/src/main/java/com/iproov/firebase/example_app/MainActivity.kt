@@ -1,8 +1,8 @@
 package com.iproov.firebase.example_app
-//import com.iproov.firebase.iproov_firebase
-
+// import com.iproov.firebase.iproov_firebase
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
@@ -22,9 +22,9 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
-import com.iproov.firebase.createIProovUser
+import com.iproov.firebase.AssuranceType
 import com.iproov.firebase.example_app.ui.theme.Iproov_firebaseTheme
-import com.iproov.firebase.signInWithIProov
+import com.iproov.firebase.iProov
 import com.iproov.sdk.IProov
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -32,7 +32,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-data class PageState(val user: FirebaseUser? = null, val isLoading: Boolean = false) {}
+data class PageState(val user: FirebaseUser? = null, val isLoading: Boolean = false)
 
 class MainActivity : ComponentActivity() {
 
@@ -47,15 +47,14 @@ class MainActivity : ComponentActivity() {
         FirebaseApp.initializeApp(this)
         super.onCreate(savedInstanceState)
 
-        setContent {
-            Page(state = pageState)
-        }
+        setContent { Page(state = pageState) }
 
         lifecycleScope.launch(Dispatchers.Default) {
             repeatOnLifecycle(Lifecycle.State.CREATED) {
                 iProovEvents.collect { sessionState: IProov.IProovSessionState? ->
                     sessionState?.state?.let { state ->
                         withContext(Dispatchers.Main) {
+                            Log.i("iProov", "State: $state")
                             setState(pageState.copy(isLoading = !state.isFinal))
                         }
                     }
@@ -66,16 +65,15 @@ class MainActivity : ComponentActivity() {
 
     private fun setState(state: PageState) {
         pageState = state
-        setContent() {
-            Page(state = pageState)
-        }
+        setContent { Page(state = pageState) }
     }
 
     override fun onStart() {
         super.onStart()
-        mAuthListener = FirebaseAuth.AuthStateListener { firebaseAuth ->
-            setState(pageState.copy(user = firebaseAuth.currentUser))
-        }
+        mAuthListener =
+                FirebaseAuth.AuthStateListener { firebaseAuth ->
+                    setState(pageState.copy(user = firebaseAuth.currentUser))
+                }
         FirebaseAuth.getInstance().addAuthStateListener(mAuthListener!!)
     }
 
@@ -88,12 +86,15 @@ class MainActivity : ComponentActivity() {
 
     private fun register() = CoroutineScope(Dispatchers.IO).launch {
         FirebaseAuth.getInstance()
-            .createIProovUser(applicationContext, "johnsmith@example.com", iProovEvents);
-    }
-
-    private fun login() = CoroutineScope(Dispatchers.IO).launch {
-        FirebaseAuth.getInstance()
-            .signInWithIProov(applicationContext, "johnsmith@example.com", iProovEvents);
+                .iProov(region = "europe-west2")
+                .createUser(
+                        applicationContext,
+                        "johnsmith@example.com",
+                        iProovEvents,
+                        assuranceType = AssuranceType.LIVENESS,
+                        iproovOptions =
+                        IProov.Options().apply { title = "Firebase Auth Example" }
+                )
     }
 
     @Composable
@@ -101,27 +102,24 @@ class MainActivity : ComponentActivity() {
         Iproov_firebaseTheme {
             // A surface container using the 'background' color from the theme
             Surface(
-                modifier = Modifier.fillMaxSize(),
-                color = MaterialTheme.colorScheme.background
-
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
             ) {
                 Column(
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-
                     if (state.isLoading) {
                         Text("Loading...", textAlign = TextAlign.Center)
                     } else {
                         if (state.user == null) {
-                            Button(onClick = {
-                                register()
-                            }) {
-                                Text("Register")
-                            }
+                            Button(onClick = { register() }) { Text("Register") }
                         } else {
 
-                            Text("User is registered ${state.user.uid}", textAlign = TextAlign.Center)
+                            Text(
+                                    "User is registered ${state.user.uid}",
+                                    textAlign = TextAlign.Center
+                            )
                             Button(onClick = { FirebaseAuth.getInstance().signOut() }) {
                                 Text("Sign out")
                             }
@@ -131,5 +129,4 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-
 }
