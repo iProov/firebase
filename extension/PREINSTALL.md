@@ -1,6 +1,6 @@
 # Introduction
 
-The iProov Firebase Extension lets you register (enrol) and sign-in (verify) users with iProov Biometrics.
+The iProov Firebase Extension lets you register (enroll) and sign-in (verify) users with iProov Biometrics.
 
 > **NOTE:** The iProov Firebase Extension is currently available as a technical preview (beta) service which means that there may be missing/broken functionality, and the API is still subject to change. We would welcome [your feedback](mailto:support@iproov.com) regarding the iProov Credentials Flutter SDK preview.
 
