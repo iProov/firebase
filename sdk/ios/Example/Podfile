@@ -4,6 +4,7 @@ platform :ios, '12.0'
 
 target 'iProovFirebase_Example' do
   pod 'iProovFirebase', :path => '../'
+  pod 'SVProgressHUD'
 
   target 'iProovFirebase_Tests' do
     inherit! :search_paths

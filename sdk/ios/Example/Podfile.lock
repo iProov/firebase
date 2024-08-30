@@ -57,9 +57,13 @@ PODS:
     - iProov (~> 11.0.0)
   - PromisesObjC (2.3.1)
   - RecaptchaInterop (100.0.0)
+  - SVProgressHUD (2.3.1):
+    - SVProgressHUD/Core (= 2.3.1)
+  - SVProgressHUD/Core (2.3.1)
 
 DEPENDENCIES:
   - iProovFirebase (from `../`)
+  - SVProgressHUD
 
 SPEC REPOS:
   trunk:
@@ -78,6 +82,7 @@ SPEC REPOS:
     - iProov
     - PromisesObjC
     - RecaptchaInterop
+    - SVProgressHUD
 
 EXTERNAL SOURCES:
   iProovFirebase:
@@ -100,7 +105,8 @@ SPEC CHECKSUMS:
   iProovFirebase: 1148a3c520ba11f6173b512f9a407c0fcf52e931
   PromisesObjC: c50d2056b5253dadbd6c2bea79b0674bd5a52fa4
   RecaptchaInterop: 7d1a4a01a6b2cb1610a47ef3f85f0c411434cb21
+  SVProgressHUD: 4837c74bdfe2e51e8821c397825996a8d7de6e22
 
-PODFILE CHECKSUM: 9e86503ce0daeb2ab6bf661cce5bedf9d4855260
+PODFILE CHECKSUM: f6bd2932385d65df388b3e09127e0e6dfa84fd64
 
-COCOAPODS: 1.14.3
+COCOAPODS: 1.15.2
