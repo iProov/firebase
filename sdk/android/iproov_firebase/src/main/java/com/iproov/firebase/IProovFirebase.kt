@@ -5,12 +5,13 @@ import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.functions.FirebaseFunctions
-import com.iproov.sdk.IProov
-import com.iproov.sdk.IProovFlowLauncher
+
+import com.iproov.sdk.api.IProov
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.onSubscription
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
@@ -48,7 +49,7 @@ class IProovFirebaseAuth(
     suspend fun createUser(
         applicationContext: Context,
         userId: String,
-        iProovEvents: MutableStateFlow<IProov.IProovSessionState?>? = null,
+        iProovEvents: MutableStateFlow<IProov.State?>? = null,
         assuranceType: AssuranceType = AssuranceType.GENUINE_PRESENCE,
         iproovOptions: IProov.Options = IProov.Options(),
     ) {
@@ -65,7 +66,7 @@ class IProovFirebaseAuth(
     suspend fun signIn(
         applicationContext: Context,
         userId: String,
-        iProovEvents: MutableStateFlow<IProov.IProovSessionState?>? = null,
+        iProovEvents: MutableStateFlow<IProov.State?>? = null,
         assuranceType: AssuranceType = AssuranceType.GENUINE_PRESENCE,
         iProovOptions: IProov.Options = IProov.Options(),
     ) {
@@ -104,7 +105,7 @@ class IProovFirebaseAuth(
     private suspend fun doIProov(
         applicationContext: Context,
         userId: String,
-        iProovEvents: MutableStateFlow<IProov.IProovSessionState?>?,
+        iProovEvents: MutableStateFlow<IProov.State?>?,
         assuranceType: AssuranceType,
         claimType: ClaimType,
         iproovOptions: IProov.Options,
@@ -126,27 +127,25 @@ class IProovFirebaseAuth(
         val region = data["region"] as String
         val token = data["token"] as String
 
-        val iProov = IProovFlowLauncher()
-        iProov.launch(
+        val session: IProov.Session = IProov.createSession(
             applicationContext,
             "wss://$region.rp.secure.iproov.me/ws",
             token,
             iproovOptions
         )
 
-        val job =
-            CoroutineScope(Dispatchers.Default).launch {
-                iProov.sessionsStates.collect { sessionState: IProov.IProovSessionState? ->
-                    sessionState?.state.let {
-                        iProovEvents?.emit(sessionState)
-                        if (it is IProov.IProovState.Success) {
-                            validate(userId, token, claimType).await()
-                            this.cancel()
-                        }
+
+        CoroutineScope(Dispatchers.Default).launch {
+            session.state
+                .onSubscription { session.start() }
+                .collect { state ->
+                    iProovEvents?.emit(state)
+                    if (state is IProov.State.Success) {
+                        validate(userId, token, claimType).await()
+                        this.cancel()
                     }
                 }
-            }
-        job.join()
+        }.join()
     }
 
     companion object {
