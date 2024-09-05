@@ -2,6 +2,8 @@ library iproov_firebase;
 
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:iproov_firebase/privacy_policy_page.dart';
 import 'package:iproov_flutter/iproov_flutter.dart';
 
 export 'package:iproov_flutter/events.dart';
@@ -12,6 +14,13 @@ class IProovEventAuthenticationSuccess implements IProovEvent {
   final UserCredential credential;
 
   const IProovEventAuthenticationSuccess(this.credential);
+
+  @override
+  bool get isFinal => true;
+}
+
+class IProovEventUserDeclinedPrivacyPolicy implements IProovEvent {
+  const IProovEventUserDeclinedPrivacyPolicy();
 
   @override
   bool get isFinal => true;
@@ -43,20 +52,23 @@ class IProovFirebaseAuth {
         extensionId = extensionId ?? _defaultExtensionId;
 
   Stream<IProovEvent> signIn({
+    required BuildContext context,
     required String userId,
     AssuranceType assuranceType = AssuranceType.genuinePresence,
     Options options = const Options(),
   }) =>
-      _doIProov(userId, assuranceType, ClaimType.verify, options);
+      _launchIProov(context, userId, assuranceType, ClaimType.verify, options);
 
   Stream<IProovEvent> createUser({
+    required BuildContext context,
     String? userId,
     AssuranceType assuranceType = AssuranceType.genuinePresence,
     Options options = const Options(),
   }) =>
-      _doIProov(userId, assuranceType, ClaimType.enrol, options);
+      _launchIProov(context, userId, assuranceType, ClaimType.enrol, options);
 
-  Stream<IProovEvent> _doIProov(
+  Stream<IProovEvent> _launchIProov(
+    BuildContext context,
     String? userId,
     AssuranceType assuranceType,
     ClaimType claimType,
@@ -72,6 +84,20 @@ class IProovFirebaseAuth {
 
     final region = data['region'];
     final token = data['token'];
+    final privacyPolicyUrl = Uri.tryParse(data['privacyPolicyUrl']);
+
+    if (privacyPolicyUrl != null && context.mounted) {
+      final didAccept = await showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        builder: (context) => PrivacyPolicyPage(url: privacyPolicyUrl),
+      );
+
+      if (!didAccept) {
+        yield const IProovEventUserDeclinedPrivacyPolicy();
+        return;
+      }
+    }
 
     final stream = IProov.launch(
       streamingUrl: 'wss://$region.rp.secure.iproov.me/ws',

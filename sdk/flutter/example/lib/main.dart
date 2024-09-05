@@ -76,7 +76,7 @@ class _HomePageState extends State<HomePage> {
     setState(() => isLoading = true);
 
     final userId = const UuidV4().generate();
-    final stream = FirebaseAuth.instance.iProov().createUser(userId: userId);
+    final stream = FirebaseAuth.instance.iProov().createUser(userId: userId, context: context);
 
     return _handleIProov(stream);
   }
@@ -84,18 +84,25 @@ class _HomePageState extends State<HomePage> {
   Future<void> _handleIProov(Stream<IProovEvent> stream) async {
     try {
       final event = await stream.last;
-      if (event is IProovEventError) {
-        _presentError(title: event.error.title, message: event.error.message);
-      } else if (event is IProovEventFailure) {
-        _presentError(title: 'IProov Failed', message: event.reason);
+      switch (event) {
+        case IProovEventUserDeclinedPrivacyPolicy _:
+          _presentError(
+            title: 'Privacy Policy Declined',
+            message: "You must accept the privacy policy to sign in with iProov.",
+          );
+          break;
+        case IProovEventFailure failure:
+          _presentError(title: 'IProov Failed', message: failure.reason);
+          break;
+        case IProovEventError event:
+          _presentError(title: event.error.title, message: event.error.message);
+          break;
       }
     } catch (e) {
       _presentError(title: 'Unknown Error', message: e.toString());
     }
 
-    if (isLoading) {
-      setState(() => isLoading = false);
-    }
+    if (isLoading) setState(() => isLoading = false);
   }
 
   void _presentError({required String title, String? message}) => showAdaptiveDialog(
