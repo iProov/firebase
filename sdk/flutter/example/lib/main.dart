@@ -53,7 +53,9 @@ class _HomePageState extends State<HomePage> {
           child: Builder(builder: (context) {
             if (isLoading) return const CircularProgressIndicator.adaptive();
 
-            if (_user == null) return FilledButton(onPressed: _onRegisterPressed, child: const Text('Enrol'));
+            if (_user == null) {
+              return FilledButton(onPressed: _onRegisterPressed, child: const Text('Register with iProov'));
+            }
 
             return Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -76,8 +78,8 @@ class _HomePageState extends State<HomePage> {
     setState(() => isLoading = true);
 
     final userId = const UuidV4().generate();
-    final stream = FirebaseAuth.instance.iProov().createUser(userId: userId, context: context);
 
+    final stream = FirebaseAuth.instance.iProov(region: 'europe-west2').createUser(userId: userId, context: context);
     return _handleIProov(stream);
   }
 
@@ -97,6 +99,13 @@ class _HomePageState extends State<HomePage> {
         case IProovEventError event:
           _presentError(title: event.error.title, message: event.error.message);
           break;
+      }
+    } on FirebaseException catch (e) {
+      if (e.code == 'NOT_FOUND') {
+        _presentError(
+            title: 'Function not setup',
+            message:
+                'Please check you have installed the Firebase extension to the correct project and specified the correct region.');
       }
     } catch (e) {
       _presentError(title: 'Unknown Error', message: e.toString());

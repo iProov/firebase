@@ -87,11 +87,10 @@ class IProovFirebaseAuth {
     final privacyPolicyUrl = Uri.tryParse(data['privacyPolicyUrl']);
 
     if (privacyPolicyUrl != null && context.mounted) {
-      final didAccept = await showModalBottomSheet(
-        context: context,
-        isScrollControlled: true,
-        builder: (context) => PrivacyPolicyPage(url: privacyPolicyUrl),
-      );
+      final didAccept = await Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => PrivacyPolicyPage(url: privacyPolicyUrl), fullscreenDialog: true),
+          ) ??
+          false;
 
       if (!didAccept) {
         yield const IProovEventUserDeclinedPrivacyPolicy();
