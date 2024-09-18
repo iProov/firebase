@@ -14,6 +14,7 @@ const ASSURANCE_TYPES = process.env.ASSURANCE_TYPES.split(',');
 admin.initializeApp();
 
 export const getToken = functions.https.onCall(async (data, context) => {
+  checkTosAccepted();
 
   const schema = Joi.object({
     userId: Joi.string().required(),
@@ -41,6 +42,7 @@ export const getToken = functions.https.onCall(async (data, context) => {
 });
 
 export const validate = functions.https.onCall(async (data, context) => {
+  checkTosAccepted();
 
   const schema = Joi.object({
     userId: Joi.string().required(),
@@ -126,4 +128,10 @@ async function signJwt(payload) {
 
   const response = await iamcredentials.projects.serviceAccounts.signJwt(request);
   return response.data.signedJwt;
+}
+
+function checkTosAccepted() {
+  if (process.env.ACCEPTED_TOS !== 'true') {
+    throw new functions.https.HttpsError('failed-precondition', 'Terms of Service not accepted');
+  }
 }

@@ -1,3 +1,7 @@
+## Version 0.3.0
+
+- Added Terms of Service
+
 ## Version 0.2.0
 
 - Support for defined assurance types

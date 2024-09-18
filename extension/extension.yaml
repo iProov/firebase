@@ -1,5 +1,5 @@
 name: auth-iproov
-version: 0.2.0
+version: 0.3.0
 specVersion: v1beta
 displayName: Authenticate with iProov
 description: >-
@@ -87,3 +87,14 @@ params:
     description: >-
       Your iProov API secret. Leave blank to use the sandbox environment.
     type: secret
+  - param: ACCEPTED_TOS
+    label: Accepted Terms of Service
+    required: true
+    description: >-
+      I have read and accept the iProov Firebase Extension Terms of Service at https://iproov.com/firebase/terms.
+    type: select
+    options:
+      - label: Agree
+        value: true
+      - label: Disagree
+        value: false
