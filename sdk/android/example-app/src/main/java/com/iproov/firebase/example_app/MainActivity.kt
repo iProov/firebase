@@ -8,10 +8,16 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -27,6 +33,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 data class PageState(val user: FirebaseUser? = null, val isLoading: Boolean = false)
 
@@ -79,18 +86,35 @@ class MainActivity : AppCompatActivity() {
         super.onStop()
     }
 
-    private fun register() = CoroutineScope(Dispatchers.IO).launch {
+    private fun register(userId: String, assuranceType: AssuranceType) = CoroutineScope(Dispatchers.IO).launch {
         try {
             FirebaseAuth.getInstance()
                 .iProov(extensionId = "auth-iproov-4nee")
                 .createUser(
                     this@MainActivity,
-                    "johnsmith@example.com",
+                    userId,
                     iProovEvents,
-                    assuranceType = AssuranceType.LIVENESS,
-                    iproovOptions =
+                    assuranceType,
                     IProov.Options().apply { title = "Firebase Auth Example" }
                 )
+
+        } catch (e: Exception) {
+            Log.e("iProov", "Error: ${e.message}")
+        }
+    }
+
+    private fun login(userId: String, assuranceType: AssuranceType) = CoroutineScope(Dispatchers.IO).launch {
+        try {
+            FirebaseAuth.getInstance()
+                .iProov(extensionId = "auth-iproov-4nee")
+                .signIn(
+                    this@MainActivity,
+                    userId,
+                    iProovEvents,
+                    assuranceType,
+                    IProov.Options().apply { title = "Firebase Auth Example" }
+                )
+
         } catch (e: Exception) {
             Log.e("iProov", "Error: ${e.message}")
         }
@@ -98,6 +122,8 @@ class MainActivity : AppCompatActivity() {
 
     @Composable
     fun Page(state: PageState) {
+        var userId by remember { mutableStateOf(UUID.randomUUID().toString()) }
+
         Iproov_firebaseTheme {
             // A surface container using the 'background' color from the theme
             Surface(
@@ -109,22 +135,27 @@ class MainActivity : AppCompatActivity() {
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Text(
-                        "Firebase Auth Example",
+                        "Firebase Android SDK Example App",
                         textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.headlineLarge
+                        style = MaterialTheme.typography.headlineSmall
                     )
 
                     if (state.isLoading) {
+                        CircularProgressIndicator()
                         Text("Loading...", textAlign = TextAlign.Center)
                     } else {
-                        if (state.user == null) {
-                            Button(onClick = { register() }) { Text("Register") }
-                        } else {
+                        TextField(
+                            value = userId,
+                            onValueChange = { userId = it },
+                            label = { Text("User ID") }
+                        )
 
-                            Text(
-                                "User is registered ${state.user.uid}",
-                                textAlign = TextAlign.Center
-                            )
+                        Button(onClick = { register(userId, AssuranceType.GENUINE_PRESENCE) }) { Text("Register with Genuine Presence Assurance") }
+                        Button(onClick = { register(userId, AssuranceType.LIVENESS) }) { Text("Register with Liveness Assurance") }
+                        Button(onClick = { login(userId, AssuranceType.GENUINE_PRESENCE) }) { Text("Login with Genuine Presence Assurance") }
+                        Button(onClick = { login(userId, AssuranceType.LIVENESS) }) { Text("Login with Liveness Assurance") }
+
+                        if (state.user != null) {
                             Button(onClick = { FirebaseAuth.getInstance().signOut() }) {
                                 Text("Sign out")
                             }

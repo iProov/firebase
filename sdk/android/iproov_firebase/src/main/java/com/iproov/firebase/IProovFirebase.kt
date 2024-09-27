@@ -1,11 +1,10 @@
 package com.iproov.firebase
 
-import android.app.Activity
 import android.content.Context
 import android.util.Log
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.gms.tasks.Task
+import com.google.android.gms.tasks.TaskCompletionSource
 import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.functions.FirebaseFunctions
@@ -21,6 +20,8 @@ import kotlinx.coroutines.tasks.await
 
 private const val defaultRegion = "us-central1"
 private const val defaultExtensionId = "auth-iproov"
+
+class IProovPrivacyPolicyDeniedException : Exception("User declined privacy policy")
 
 enum class AssuranceType(val value: String) {
     LIVENESS("liveness"),
@@ -56,7 +57,7 @@ class IProovFirebaseAuth(
         userId: String,
         iProovEvents: MutableStateFlow<IProov.State?>? = null,
         assuranceType: AssuranceType = AssuranceType.GENUINE_PRESENCE,
-        iproovOptions: IProov.Options = IProov.Options(),
+        iProovOptions: IProov.Options = IProov.Options(),
     ) {
         return getTokenAndLaunchIProov(
             activity,
@@ -64,7 +65,7 @@ class IProovFirebaseAuth(
             iProovEvents,
             assuranceType,
             ClaimType.ENROL,
-            iproovOptions,
+            iProovOptions,
         )
     }
 
@@ -75,6 +76,7 @@ class IProovFirebaseAuth(
         assuranceType: AssuranceType = AssuranceType.GENUINE_PRESENCE,
         iProovOptions: IProov.Options = IProov.Options(),
     ) {
+
         return getTokenAndLaunchIProov(
             activity,
             userId,
@@ -115,6 +117,7 @@ class IProovFirebaseAuth(
         claimType: ClaimType,
         iproovOptions: IProov.Options,
     ) {
+
         val response =
             functions
                 .getHttpsCallable("ext-${extensionId}-getToken")
@@ -136,15 +139,19 @@ class IProovFirebaseAuth(
         if (privacyPolicyUrl != null) {
             Log.i("iProov", "LAUNCH Privacy Policy URL: $privacyPolicyUrl")
 
-            activity.registerForActivityResult(
-                ActivityResultContracts.StartActivityForResult()
-            ) { result ->
-                if (result.resultCode == Activity.RESULT_OK) {
-                    // Handle success
-                } else {
-                    // Handle failure
+            val dialog = PrivacyPolicyDialog.newInstance(privacyPolicyUrl)
+            dialog.setOnDialogResultListener(object : PrivacyPolicyDialog.ResultListener {
+                override fun onAccept() {
+                    CoroutineScope(Dispatchers.Default).launch {
+                        launchIProov(activity, region, token, userId, claimType, iproovOptions, iProovEvents)
+                    }
                 }
-            }
+
+                override fun onDecline() {
+                    throw IProovPrivacyPolicyDeniedException()
+                }
+            })
+            dialog.show(activity.supportFragmentManager, "PrivacyPolicyActivity")
 
         } else {
             launchIProov(activity, region, token, userId, claimType, iproovOptions, iProovEvents)
@@ -153,17 +160,18 @@ class IProovFirebaseAuth(
     }
 
     private suspend fun launchIProov(context: Context,
-                             region: String,
-                             token: String,
-                             userId: String,
-                             claimType: ClaimType,
-                             iproovOptions: IProov.Options,
-                             iProovEvents: MutableStateFlow<IProov.State?>?) {
+                                     region: String,
+                                     token: String,
+                                     userId: String,
+                                     claimType: ClaimType,
+                                     iProovOptions: IProov.Options,
+                                     iProovEvents: MutableStateFlow<IProov.State?>?) {
+
         val session: IProov.Session = IProov.createSession(
             context,
             "wss://$region.rp.secure.iproov.me/ws",
             token,
-            iproovOptions
+            iProovOptions
         )
 
         CoroutineScope(Dispatchers.Default).launch {
