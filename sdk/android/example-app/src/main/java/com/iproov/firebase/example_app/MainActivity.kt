@@ -86,7 +86,7 @@ class MainActivity : AppCompatActivity() {
         super.onStop()
     }
 
-    private fun register(userId: String, assuranceType: AssuranceType) = CoroutineScope(Dispatchers.IO).launch {
+    private fun register(userId: String, assuranceType: AssuranceType) {
         try {
             FirebaseAuth.getInstance()
                 .iProov(extensionId = "auth-iproov-4nee")
@@ -103,7 +103,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun login(userId: String, assuranceType: AssuranceType) = CoroutineScope(Dispatchers.IO).launch {
+    private fun login(userId: String, assuranceType: AssuranceType) {
         try {
             FirebaseAuth.getInstance()
                 .iProov(extensionId = "auth-iproov-4nee")
