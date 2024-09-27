@@ -9,7 +9,7 @@ android {
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.iproov.firebase.example_app"
+        applicationId = "com.iproov.firebase.example"
         minSdk = 26
         targetSdk = 34
         versionCode = 1

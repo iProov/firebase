@@ -82,7 +82,7 @@ class MainActivity : AppCompatActivity() {
     private fun register() = CoroutineScope(Dispatchers.IO).launch {
         try {
             FirebaseAuth.getInstance()
-                .iProov(region = "europe-west2")
+                .iProov(extensionId = "auth-iproov-4nee")
                 .createUser(
                     this@MainActivity,
                     "johnsmith@example.com",

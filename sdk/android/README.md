@@ -146,6 +146,7 @@ SDK.
 
 1. Download the google-services.json file from Firebase and add it to the `example-app/` directory.
 2. Open the `example-app` directory in Android Studio.
+3. Update the line `applicationId = "com.iproov.firebase.example"` to match the package name specified in your `google-services.json` file.
 
 ## Further reading
 

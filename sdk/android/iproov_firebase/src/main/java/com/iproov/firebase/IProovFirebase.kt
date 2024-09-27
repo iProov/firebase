@@ -1,6 +1,10 @@
 package com.iproov.firebase
 
+import android.app.Activity
 import android.content.Context
+import android.util.Log
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
 import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FirebaseAuth
@@ -15,6 +19,7 @@ import kotlinx.coroutines.flow.onSubscription
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
+private const val defaultRegion = "us-central1"
 private const val defaultExtensionId = "auth-iproov"
 
 enum class AssuranceType(val value: String) {
@@ -27,8 +32,8 @@ enum class ClaimType(val value: String) {
     VERIFY("verify"),
 }
 
-fun FirebaseAuth.iProov(region: String? = null, extensionId: String? = null) =
-    IProovFirebaseAuth(this, extensionId = extensionId ?: defaultExtensionId, region = region)
+fun FirebaseAuth.iProov(region: String = defaultRegion, extensionId: String = defaultExtensionId) =
+    IProovFirebaseAuth(this, extensionId, region)
 
 class IProovFirebaseAuth(
     private val functions: FirebaseFunctions,
@@ -38,23 +43,23 @@ class IProovFirebaseAuth(
 
     constructor(
         auth: FirebaseAuth,
-        extensionId: String? = null,
-        region: String? = null
+        extensionId: String = defaultExtensionId,
+        region: String = defaultRegion
     ) : this(
-        FirebaseFunctions.getInstance(auth.app, region ?: defaultRegion),
+        FirebaseFunctions.getInstance(auth.app, region),
         auth,
-        extensionId = extensionId ?: defaultExtensionId
+        extensionId
     )
 
     suspend fun createUser(
-        applicationContext: Context,
+        activity: AppCompatActivity,
         userId: String,
         iProovEvents: MutableStateFlow<IProov.State?>? = null,
         assuranceType: AssuranceType = AssuranceType.GENUINE_PRESENCE,
         iproovOptions: IProov.Options = IProov.Options(),
     ) {
-        return doIProov(
-            applicationContext,
+        return getTokenAndLaunchIProov(
+            activity,
             userId,
             iProovEvents,
             assuranceType,
@@ -64,14 +69,14 @@ class IProovFirebaseAuth(
     }
 
     suspend fun signIn(
-        applicationContext: Context,
+        activity: AppCompatActivity,
         userId: String,
         iProovEvents: MutableStateFlow<IProov.State?>? = null,
         assuranceType: AssuranceType = AssuranceType.GENUINE_PRESENCE,
         iProovOptions: IProov.Options = IProov.Options(),
     ) {
-        return doIProov(
-            applicationContext,
+        return getTokenAndLaunchIProov(
+            activity,
             userId,
             iProovEvents,
             assuranceType,
@@ -102,8 +107,8 @@ class IProovFirebaseAuth(
         return auth.signInWithCustomToken(jwt)
     }
 
-    private suspend fun doIProov(
-        applicationContext: Context,
+    private suspend fun getTokenAndLaunchIProov(
+        activity: AppCompatActivity,
         userId: String,
         iProovEvents: MutableStateFlow<IProov.State?>?,
         assuranceType: AssuranceType,
@@ -126,14 +131,40 @@ class IProovFirebaseAuth(
 
         val region = data["region"] as String
         val token = data["token"] as String
+        val privacyPolicyUrl = data["privacyPolicyUrl"] as String?
 
+        if (privacyPolicyUrl != null) {
+            Log.i("iProov", "LAUNCH Privacy Policy URL: $privacyPolicyUrl")
+
+            activity.registerForActivityResult(
+                ActivityResultContracts.StartActivityForResult()
+            ) { result ->
+                if (result.resultCode == Activity.RESULT_OK) {
+                    // Handle success
+                } else {
+                    // Handle failure
+                }
+            }
+
+        } else {
+            launchIProov(activity, region, token, userId, claimType, iproovOptions, iProovEvents)
+        }
+
+    }
+
+    private suspend fun launchIProov(context: Context,
+                             region: String,
+                             token: String,
+                             userId: String,
+                             claimType: ClaimType,
+                             iproovOptions: IProov.Options,
+                             iProovEvents: MutableStateFlow<IProov.State?>?) {
         val session: IProov.Session = IProov.createSession(
-            applicationContext,
+            context,
             "wss://$region.rp.secure.iproov.me/ws",
             token,
             iproovOptions
         )
-
 
         CoroutineScope(Dispatchers.Default).launch {
             session.state
@@ -148,8 +179,4 @@ class IProovFirebaseAuth(
         }.join()
     }
 
-    companion object {
-        private const val defaultExtensionId = "auth-iproov"
-        private const val defaultRegion = "us-central1"
-    }
 }
