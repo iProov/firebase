@@ -1,6 +1,7 @@
 package com.iproov.firebase
 
 import android.content.Context
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.gms.tasks.Task
 import com.google.android.gms.tasks.TaskCompletionSource
@@ -18,6 +19,7 @@ private const val defaultRegion = "us-central1"
 private const val defaultExtensionId = "auth-iproov"
 
 class IProovPrivacyPolicyDeniedException : Exception("User declined privacy policy")
+class IProovFailureException(failureResult: IProov.FailureResult) : Exception(failureResult.reason.name)
 
 enum class AssuranceType(val value: String) {
     LIVENESS("liveness"),
@@ -181,18 +183,30 @@ class IProovFirebaseAuth(
                 .onSubscription { session.start() }
                 .collect { state ->
                     iProovEvents?.emit(state)
-                    if (state is IProov.State.Success) {
-                        try {
-                            val result = validate(userId, token, claimType)
-                            taskCompletionSource.setResult(result)
-                        } catch (e: Exception) {
-                            taskCompletionSource.setException(e)
-                        } finally {
-                            this.cancel()
+
+                    when (state) {
+                        is IProov.State.Error -> {
+                            taskCompletionSource.setException(state.exception)
                         }
+
+                        is IProov.State.Failure -> {
+                            val exception = IProovFailureException(state.failureResult)
+                            taskCompletionSource.setException(exception)
+                        }
+
+                        is IProov.State.Success -> {
+                            try {
+                                val result = validate(userId, token, claimType)
+                                taskCompletionSource.setResult(result)
+                            } catch (e: Exception) {
+                                taskCompletionSource.setException(e)
+                            }
+                        }
+
+                        else -> { }
                     }
                 }
-        }.join()
+        }
     }
 
     private suspend fun validate(

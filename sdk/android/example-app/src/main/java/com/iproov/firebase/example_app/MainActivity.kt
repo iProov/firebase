@@ -22,7 +22,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.lifecycleScope
+import com.google.android.gms.tasks.Task
 import com.google.firebase.FirebaseApp
+import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.iproov.firebase.AssuranceType
@@ -87,37 +89,41 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun register(userId: String, assuranceType: AssuranceType) {
-        try {
-            FirebaseAuth.getInstance()
-                .iProov(extensionId = "auth-iproov-4nee")
-                .createUser(
-                    this@MainActivity,
-                    userId,
-                    iProovEvents,
-                    assuranceType,
-                    IProov.Options().apply { title = "Firebase Auth Example" }
-                )
 
-        } catch (e: Exception) {
-            Log.e("iProov", "Error: ${e.message}")
-        }
+        FirebaseAuth.getInstance()
+            .iProov(extensionId = "auth-iproov-4nee")
+            .createUser(
+                this,
+                userId,
+                iProovEvents,
+                assuranceType,
+                IProov.Options().apply { title = "Firebase Auth Example" }
+            ).addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    Log.i("iProov", "User created successfully")
+                } else {
+                    Log.e("iProov", "Error: ${task.exception?.message}")
+                }
+            }
     }
 
     private fun login(userId: String, assuranceType: AssuranceType) {
-        try {
-            FirebaseAuth.getInstance()
-                .iProov(extensionId = "auth-iproov-4nee")
-                .signIn(
-                    this@MainActivity,
-                    userId,
-                    iProovEvents,
-                    assuranceType,
-                    IProov.Options().apply { title = "Firebase Auth Example" }
-                )
 
-        } catch (e: Exception) {
-            Log.e("iProov", "Error: ${e.message}")
-        }
+        FirebaseAuth.getInstance()
+            .iProov(extensionId = "auth-iproov-4nee")
+            .signIn(
+                this,
+                userId,
+                iProovEvents,
+                assuranceType,
+                IProov.Options().apply { title = "Firebase Auth Example" }
+            ).addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    Log.i("iProov", "User signed in successfully")
+                } else {
+                    Log.e("iProov", "Error: ${task.exception?.message}")
+                }
+            }
     }
 
     @Composable
