@@ -56,7 +56,6 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch(Dispatchers.IO) {
             iProovEvents
                 .collect { state ->
-                    Log.i("iProov", "State: $state")
                     setState(pageState.copy(loadingMessage = state?.toString()))
                 }
         }
@@ -90,7 +89,7 @@ class MainActivity : AppCompatActivity() {
         setState(pageState.copy(loadingMessage = "Getting token..."))
 
         FirebaseAuth.getInstance()
-            .iProov(extensionId = "auth-iproov-4nee")
+            .iProov()
             .createUser(
                 this,
                 userId,
@@ -105,7 +104,7 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 setState(pageState.copy(loadingMessage = null))
-            }.addOnCanceledListener { Log.e("iProov", "Cancelled") }
+            }
     }
 
     private fun login(userId: String, assuranceType: AssuranceType) {
@@ -113,7 +112,7 @@ class MainActivity : AppCompatActivity() {
         setState(pageState.copy(loadingMessage = "Getting token..."))
 
         FirebaseAuth.getInstance()
-            .iProov(extensionId = "auth-iproov-4nee")
+            .iProov()
             .signIn(
                 this,
                 userId,
