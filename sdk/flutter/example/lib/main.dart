@@ -1,25 +1,20 @@
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_auth_example/firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:iproov_firebase/iproov_firebase.dart';
 import 'package:uuid/v4.dart';
 
+import 'firebase_options.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   runApp(
-    MaterialApp(
-      debugShowCheckedModeBanner: true,
-      home: const HomePage(),
-      theme: ThemeData(useMaterial3: true),
-    ),
+    MaterialApp(debugShowCheckedModeBanner: true, home: const HomePage(), theme: ThemeData(useMaterial3: true)),
   );
 }
 
@@ -35,11 +30,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void initState() {
-    _subscription = FirebaseAuth.instance.authStateChanges().listen((event) {
-      setState(() {
-        _user = event;
-      });
-    });
+    _subscription = FirebaseAuth.instance.authStateChanges().listen((event) => setState(() => _user = event));
     super.initState();
   }
 
@@ -62,31 +53,17 @@ class _HomePageState extends State<HomePage> {
           child: Builder(builder: (context) {
             if (isLoading) return const CircularProgressIndicator.adaptive();
 
-            if (_user == null) {
-              return FilledButton(
-                onPressed: _onRegisterPressed,
-                child: const Text('Enrol'),
-              );
-            }
+            if (_user == null) return FilledButton(onPressed: _onRegisterPressed, child: const Text('Enrol'));
 
             return Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const Text(
-                  'You have successfully authenticated',
-                  textAlign: TextAlign.center,
-                ),
+                const Text('You have successfully authenticated', textAlign: TextAlign.center),
                 const SizedBox(height: 5),
-                Text(
-                  'Firebase UID: ${_user!.uid}',
-                  textAlign: TextAlign.center,
-                ),
+                Text('Firebase UID: ${_user!.uid}', textAlign: TextAlign.center),
                 const SizedBox(height: 15),
-                FilledButton(
-                  onPressed: () => FirebaseAuth.instance.signOut(),
-                  child: const Text('Sign out'),
-                ),
+                FilledButton(onPressed: () => FirebaseAuth.instance.signOut(), child: const Text('Sign out')),
               ],
             );
           }),
@@ -96,15 +73,10 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _onRegisterPressed() async {
-    setState(() {
-      isLoading = true;
-    });
+    setState(() => isLoading = true);
 
     final userId = const UuidV4().generate();
-    final stream = FirebaseAuth.instance.createIProovUser(
-      userId: userId,
-      assuranceType: AssuranceType.genuinePresence,
-    );
+    final stream = FirebaseAuth.instance.iProov().createUser(userId: userId);
 
     return _handleIProov(stream);
   }
@@ -122,20 +94,16 @@ class _HomePageState extends State<HomePage> {
     }
 
     if (isLoading) {
-      setState(() {
-        isLoading = false;
-      });
+      setState(() => isLoading = false);
     }
   }
 
-  void _presentError({required String title, String? message}) {
-    showAdaptiveDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (context) => AlertDialog.adaptive(
-        title: Text(title),
-        content: Text(message ?? 'Unknown Error'),
-      ),
-    );
-  }
+  void _presentError({required String title, String? message}) => showAdaptiveDialog(
+        context: context,
+        barrierDismissible: true,
+        builder: (context) => AlertDialog.adaptive(
+          title: Text(title),
+          content: Text(message ?? 'Unknown Error'),
+        ),
+      );
 }

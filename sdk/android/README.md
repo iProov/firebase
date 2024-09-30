@@ -6,15 +6,14 @@ Before you can use this SDK, you will need to:
 
 - Create a Firebase project in the [Firebase console](https://console.firebase.google.com)
 - Register your app with Firebase
-- Download the `google-services.json` file and add it to your project
+- Download the `google-services.json` file and add it to your project in the root directory
 - Add the iProov Firebase Android SDK to your project
 
 Now you can add the iProov Firebase Android SDK to your project.
 
 ## Installation
 
-The iProov Firebase Android SDK is provided in Android Library Project (AAR) format as a Maven dependency.
-
+The iProov Firebase Android SDK is available on GitHub, and can be installed via JitPack.
 
 1. Open the `build.gradle` file corresponding to the new, or existing, Android Studio project that you want to integrate. Typically, this is the `build.gradle` file for the `app` module.
 
@@ -115,8 +114,8 @@ FirebaseAuth.getInstance()
 In the `example-app` folder, you'll find an example implementation of the iProov Firebase Android
 SDK.
 
-1. Download the google-services.json file from Firebase and add it to the `example-app/` directory.
-2. Open the `example-app` directory in Android Studio.
+1. Download the google-services.json file from Firebase and add it to the `example-app` directory.
+2. Open the `example-app` directory in Android Studio to build and run the project.
 3. Update the line `applicationId = "com.iproov.firebase.example"` to match the package name specified in your `google-services.json` file.
 
 ## Further reading

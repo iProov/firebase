@@ -30,7 +30,7 @@ The iProov Firebase SDK extends Firebase Auth with support for creating and sign
 To register an iProov user using Genuine Presence Assurance with the default settings:
 
 ```swift
-Auth.auth().createUser(withIProovUserID: "hello@world.com") { result, error in
+Auth.iProov().createUser(withUserID: "hello@world.com") { result, error in
     if let error = error {
         print("Error: \(error)")
         return
@@ -42,15 +42,14 @@ Auth.auth().createUser(withIProovUserID: "hello@world.com") { result, error in
 }
 ```
 
-To sign in an existing user, simply use `Auth.auth().signIn(withIProovUserID:)` and pass their `userID`.
+To sign in an existing user, simply use `Auth.iProov().signIn(withUserID:)` and pass their `userID`.
 
 ### Advanced example
 
-Once you've got up and running with the basic example, you can now pass additional parameters to `createIProovUser()` and `signInIProovUser()`:
+Once you've got up and running with the basic example, you can now pass additional parameters to `createUser()` and `signIn()`:
 
 - `assuranceType` - specify the assurance type (Genuine Presence Assurance or Liveness Assurance)
 - `options` - customize any [iProov SDK options](https://github.com/iproov/ios?tab=readme-ov-file#options)
-- `extensionID` - if you have more than one instance of the iProov Extension installed or the extension ID is anything other than `auth-iproov`, you can override it here
 - `progressCallback` - progress callbacks from iProov indicating face scan progress
 
 Here's an example, creating an iProov user with Liveness Assurance, specifying a custom title for the face scan and listening to the iProov SDK callback events:
@@ -59,10 +58,10 @@ Here's an example, creating an iProov user with Liveness Assurance, specifying a
 let options = Options()
 options.title = "Firebase Auth Example"
 
-Auth.auth().createUser(withIProovUserID: "hello@world.com",
-                       assuranceType: .liveness,
-                       options: options,
-                       progressCallback: { progress in
+Auth.iProov().createUser(withUserID: "hello@world.com",
+                         assuranceType: .liveness,
+                         options: options,
+                         progressCallback: { progress in
     print(progress)
 }) { result, error in
     if let error = error {
@@ -74,6 +73,13 @@ Auth.auth().createUser(withIProovUserID: "hello@world.com",
         print("User ID: \(user.uid))
     }
 }
+```
+
+You can also pass additional parameters to `Auth.iProov()` if your extension ID is anything other than `iproov-auth` and/or your extension is installed in a region other than `us-central1`, e.g.:
+
+```swift
+Auth.iProov(region: "europe-west2",
+            extensionID: "auth-iproov-3bau")
 ```
 
 ## Example app

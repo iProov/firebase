@@ -32,12 +32,28 @@ public struct IProovProgress {
     let message: String
 }
 
-extension Auth {
+public final class IProovAuth {
+
+    private let auth: Auth
+    private let functions: Functions
+    private let extensionID: String
     
-    public func createUser(withIProovUserID userID: String,
+    init(app: FirebaseApp? = FirebaseApp.app(),
+         region: String = "us-central1",
+         extensionID: String = "auth-iproov") {
+        
+        guard let app = app else {
+            fatalError("No Firebase app configured")
+        }
+        
+        self.auth = Auth.auth(app: app)
+        self.functions = Functions.functions(app: app, region: region)
+        self.extensionID = extensionID
+    }
+    
+    public func createUser(withUserID userID: String,
                            assuranceType: AssuranceType = .genuinePresence,
                            options: Options? = nil,
-                           extensionID: String = "auth-iproov",
                            progressCallback: IProovProgressCallback? = nil,
                            completion: AuthCallback?) {
         
@@ -45,15 +61,13 @@ extension Auth {
                  claimType: ClaimType.enrol,
                  assuranceType: assuranceType,
                  options: options,
-                 extensionID: extensionID,
                  progressCallback: progressCallback,
                  completion: completion)
     }
     
-    public func signIn(withIProovUserID userID: String,
+    public func signIn(withUserID userID: String,
                        assuranceType: AssuranceType = .genuinePresence,
                        options: Options? = nil,
-                       extensionID: String = "auth-iproov",
                        progressCallback: IProovProgressCallback? = nil,
                        completion: AuthCallback?) {
         
@@ -61,7 +75,6 @@ extension Auth {
                  claimType: ClaimType.verify,
                  assuranceType: assuranceType,
                  options: options,
-                 extensionID: extensionID,
                  progressCallback: progressCallback,
                  completion: completion)
         
@@ -71,11 +84,10 @@ extension Auth {
                           claimType: ClaimType,
                           assuranceType: AssuranceType,
                           options: Options?,
-                          extensionID: String,
                           progressCallback: IProovProgressCallback?,
                           completion: AuthCallback?) {
         
-        Functions.functions().httpsCallable("ext-\(extensionID)-getToken").call([
+        functions.httpsCallable("ext-\(extensionID)-getToken").call([
             "userId": userID,
             "claimType": claimType.rawValue,
             "assuranceType": assuranceType.rawValue,
@@ -118,7 +130,6 @@ extension Auth {
                     self.validate(userID: userID,
                                   token: token,
                                   claimType: claimType,
-                                  extensionID: extensionID,
                                   completion: completion)
                 }
             }
@@ -128,10 +139,9 @@ extension Auth {
     private func validate(userID: String,
                           token: String,
                           claimType: ClaimType,
-                          extensionID: String,
                           completion: AuthCallback?) {
         
-        Functions.functions().httpsCallable("ext-\(extensionID)-validate").call([
+        functions.httpsCallable("ext-\(extensionID)-validate").call([
             "userId": userID,
             "token": token,
             "claimType": claimType.rawValue
@@ -143,7 +153,19 @@ extension Auth {
             }
 
             let jwt = result!.data as! String
-            Auth.auth().signIn(withCustomToken: jwt, completion: completion)
+            self.auth.signIn(withCustomToken: jwt, completion: completion)
         }
     }
+    
+}
+
+public extension Auth {
+    
+    static func iProov(app: FirebaseApp? = FirebaseApp.app(),
+                       region: String = "us-central1",
+                       extensionID: String = "auth-iproov") -> IProovAuth {
+        
+        return IProovAuth(app: app, region: region, extensionID: extensionID)
+    }
+    
 }
