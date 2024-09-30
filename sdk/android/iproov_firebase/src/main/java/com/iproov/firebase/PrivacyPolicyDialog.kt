@@ -57,8 +57,8 @@ class PrivacyPolicyDialog : DialogFragment() {
         }
 
         with(webView) {
-            settings.javaScriptEnabled = true  // Enable JavaScript (if needed)
-            settings.domStorageEnabled = true  // Enable DOM storage
+            settings.javaScriptEnabled = true
+            settings.domStorageEnabled = true
 
             webViewClient = object : WebViewClient() {
 
@@ -78,7 +78,6 @@ class PrivacyPolicyDialog : DialogFragment() {
                 }
             }
 
-            // Load your content
             loadUrl(url)
         }
 
