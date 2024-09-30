@@ -52,56 +52,26 @@ The iProov Firebase Android SDK is provided in Android Library Project (AAR) for
 
 ### Basic example
 
-To register an iProov user using Genuine Presence Assurance with the default settings:
+To register an iProov user using Genuine Presence Assurance with the default settings, add this to your `Activity`:
 
 ```kotlin
+val iProovEvents: MutableStateFlow<IProov.IProovSessionState?> = MutableStateFlow(null)
 
-class MainActivity : ComponentActivity() {
-
-    companion object {
-        val iProovEvents: MutableStateFlow<IProov.IProovSessionState?> = MutableStateFlow(null)
-    }
-
-    override fun onStart() {
-        super.onStart()
-        mAuthListener = FirebaseAuth.AuthStateListener { firebaseAuth ->
-            print("FirebaseAuth state changed: ${firebaseAuth.currentUser}")
-        }
-
-        FirebaseAuth.getInstance().addAuthStateListener(mAuthListener!!)
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        FirebaseApp.initializeApp(this)
-        super.onCreate(savedInstanceState)
-
-        setContent {
-            Page()
-        }
-
-        lifecycleScope.launch(Dispatchers.Default) {
-            repeatOnLifecycle(Lifecycle.State.CREATED) {
-                iProovEvents.collect { sessionState: IProov.IProovSessionState? ->
-                    sessionState?.state?.let { state ->
-                        withContext(Dispatchers.Main) {
-                            print("IProov state: $state")
-                        }
-                    }
-                }
-            }
+FirebaseAuth.getInstance()
+    .iProov()
+    .createUser(
+        this,
+        "johnsmith@example.com",
+        iProovEvents
+    ).addOnCompleteListener { task ->
+        if (task.result?.user != null) {
+            Log.i("iProov", "User created successfully")
+        } else if (task.exception == null) {
+            Log.i("iProov", "User cancelled")
+        } else {
+            Log.e("iProov", "Error: ${task.exception?.message}")
         }
     }
-
-    private fun createUser() = CoroutineScope(Dispatchers.IO).launch {
-        FirebaseAuth.getInstance().iProov()
-            .createUser(applicationContext, "johnsmith@example.com", iProovEvents)
-    }
-
-    private fun signIn() = CoroutineScope(Dispatchers.IO).launch {
-        FirebaseAuth.getInstance().iProov()
-            .signIn(applicationContext, "johnsmith@example.com", iProovEvents)
-    }
-}
 ```
 
 ### Advanced example
@@ -117,18 +87,18 @@ Here's an example of modifying the above createUser function, creating an iProov
 Assurance and specifying a custom title for the face scan and the extension.
 
 ```kotlin
-private fun register() = CoroutineScope(Dispatchers.IO).launch {
-    FirebaseAuth.getInstance().iProov().createUser(
-        applicationContext,
+FirebaseAuth.getInstance()
+    .iProov()
+    .createUser(
+        this,
         "johnsmith@example.com",
         iProovEvents,
         assuranceType = AssuranceType.LIVENESS,
         iproovOptions = IProov.Options().apply {
             title = "Firebase Auth Example"
         }
-
     )
-}
+)
 ```
 
 You can also pass additional parameters to `FirebaseAuth.getInstance().iProov()` if your extension
@@ -136,7 +106,8 @@ ID is anything other than `iproov-auth` and/or your extension is installed in a 
 than `us-central1`, e.g.:
 
 ```kotlin
-FirebaseAuth.getInstance().iProov(region = "europe-west2", extensionId = "iproov-auth-eu")
+FirebaseAuth.getInstance()
+    .iProov(region = "europe-west2", extensionId = "iproov-auth-eu")
 ```
 
 ## Example App
