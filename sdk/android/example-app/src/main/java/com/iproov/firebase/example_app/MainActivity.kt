@@ -22,31 +22,28 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.lifecycleScope
-import com.google.android.gms.tasks.Task
 import com.google.firebase.FirebaseApp
-import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.iproov.firebase.AssuranceType
 import com.iproov.firebase.example_app.ui.theme.Iproov_firebaseTheme
 import com.iproov.firebase.iProov
 import com.iproov.sdk.api.IProov
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import java.util.UUID
 
-data class PageState(val user: FirebaseUser? = null, val isLoading: Boolean = false)
+data class PageState(
+    val user: FirebaseUser? = null,
+    val loadingMessage: String? = null,
+)
 
 class MainActivity : AppCompatActivity() {
 
     private var pageState = PageState()
-    private var mAuthListener: FirebaseAuth.AuthStateListener? = null
-
-    companion object {
-        val iProovEvents: MutableStateFlow<IProov.State?> = MutableStateFlow(null)
-    }
+    private var authListener: FirebaseAuth.AuthStateListener? = null
+    private val iProovEvents: MutableStateFlow<IProov.State?> = MutableStateFlow(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         FirebaseApp.initializeApp(this)
@@ -60,7 +57,7 @@ class MainActivity : AppCompatActivity() {
             iProovEvents
                 .collect { state ->
                     Log.i("iProov", "State: $state")
-                    setState(pageState.copy(isLoading = !(state?.isFinal ?: true)))
+                    setState(pageState.copy(loadingMessage = state?.toString()))
                 }
         }
     }
@@ -74,21 +71,23 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-        mAuthListener =
+        authListener =
             FirebaseAuth.AuthStateListener { firebaseAuth ->
                 setState(pageState.copy(user = firebaseAuth.currentUser))
             }
-        FirebaseAuth.getInstance().addAuthStateListener(mAuthListener!!)
+        FirebaseAuth.getInstance().addAuthStateListener(authListener!!)
     }
 
     override fun onStop() {
-        mAuthListener?.let { listener ->
+        authListener?.let { listener ->
             FirebaseAuth.getInstance().removeAuthStateListener(listener)
         }
         super.onStop()
     }
 
     private fun register(userId: String, assuranceType: AssuranceType) {
+
+        setState(pageState.copy(loadingMessage = "Getting token..."))
 
         FirebaseAuth.getInstance()
             .iProov(extensionId = "auth-iproov-4nee")
@@ -99,15 +98,19 @@ class MainActivity : AppCompatActivity() {
                 assuranceType,
                 IProov.Options().apply { title = "Firebase Auth Example" }
             ).addOnCompleteListener { task ->
-                if (task.isSuccessful) {
+                if (task.result?.user != null) {
                     Log.i("iProov", "User created successfully")
                 } else {
                     Log.e("iProov", "Error: ${task.exception?.message}")
                 }
-            }
+
+                setState(pageState.copy(loadingMessage = null))
+            }.addOnCanceledListener { Log.e("iProov", "Cancelled") }
     }
 
     private fun login(userId: String, assuranceType: AssuranceType) {
+
+        setState(pageState.copy(loadingMessage = "Getting token..."))
 
         FirebaseAuth.getInstance()
             .iProov(extensionId = "auth-iproov-4nee")
@@ -118,11 +121,13 @@ class MainActivity : AppCompatActivity() {
                 assuranceType,
                 IProov.Options().apply { title = "Firebase Auth Example" }
             ).addOnCompleteListener { task ->
-                if (task.isSuccessful) {
+                if (task.result?.user != null) {
                     Log.i("iProov", "User signed in successfully")
                 } else {
                     Log.e("iProov", "Error: ${task.exception?.message}")
                 }
+
+                setState(pageState.copy(loadingMessage = null))
             }
     }
 
@@ -146,9 +151,9 @@ class MainActivity : AppCompatActivity() {
                         style = MaterialTheme.typography.headlineSmall
                     )
 
-                    if (state.isLoading) {
+                    if (state.loadingMessage != null) {
                         CircularProgressIndicator()
-                        Text("Loading...", textAlign = TextAlign.Center)
+                        Text(state.loadingMessage, textAlign = TextAlign.Center)
                     } else {
                         TextField(
                             value = userId,

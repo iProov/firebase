@@ -1,7 +1,6 @@
 package com.iproov.firebase
 
 import android.content.Context
-import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.gms.tasks.Task
 import com.google.android.gms.tasks.TaskCompletionSource
@@ -201,6 +200,10 @@ class IProovFirebaseAuth(
                             } catch (e: Exception) {
                                 taskCompletionSource.setException(e)
                             }
+                        }
+
+                        is IProov.State.Canceled -> {
+                            taskCompletionSource.setResult(null)
                         }
 
                         else -> { }
