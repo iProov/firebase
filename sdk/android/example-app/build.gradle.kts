@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.iproov.firebase.example_app"
+    namespace = "com.iproov.firebase.example"
     compileSdk = 34
 
     defaultConfig {
@@ -70,7 +70,4 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
     implementation(project(":iproov_firebase"))
-    implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
-    implementation("com.google.firebase:firebase-auth")
-    implementation("com.iproov.sdk:iproov:9.0.3")
 }
