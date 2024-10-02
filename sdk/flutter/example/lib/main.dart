@@ -27,17 +27,20 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   StreamSubscription? _subscription;
+  final _userIdController = TextEditingController();
 
   @override
   void initState() {
     _subscription = FirebaseAuth.instance.authStateChanges().listen((event) => setState(() => _user = event));
+    _userIdController.text = const UuidV4().generate();
     super.initState();
   }
 
   @override
   void dispose() {
-    super.dispose();
     _subscription?.cancel();
+    _userIdController.dispose();
+    super.dispose();
   }
 
   User? _user;
@@ -46,26 +49,53 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Firebase Auth Example')),
+      appBar: AppBar(title: const Text('iProov Firebase Flutter SDK Example App')),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 15),
         child: Center(
           child: Builder(builder: (context) {
             if (isLoading) return const CircularProgressIndicator.adaptive();
 
-            if (_user == null) {
-              return FilledButton(onPressed: _onRegisterPressed, child: const Text('Register with iProov'));
-            }
-
             return Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const Text('You have successfully authenticated', textAlign: TextAlign.center),
-                const SizedBox(height: 5),
-                Text('Firebase UID: ${_user!.uid}', textAlign: TextAlign.center),
-                const SizedBox(height: 15),
-                FilledButton(onPressed: () => FirebaseAuth.instance.signOut(), child: const Text('Sign out')),
+                TextFormField(
+                  controller: _userIdController,
+                  decoration: const InputDecoration(
+                    border: UnderlineInputBorder(),
+                    labelText: 'User ID',
+                  ),
+                ),
+                FilledButton(
+                  onPressed: () {
+                    _onRegisterPressed(AssuranceType.genuinePresence);
+                  },
+                  child: const Text('Register with Genuine Presence Assurance'),
+                ),
+                FilledButton(
+                  onPressed: () {
+                    _onRegisterPressed(AssuranceType.liveness);
+                  },
+                  child: const Text('Register with Liveness Assurance'),
+                ),
+                FilledButton(
+                  onPressed: () {
+                    _onLoginPressed(AssuranceType.genuinePresence);
+                  },
+                  child: const Text('Login with Genuine Presence Assurance'),
+                ),
+                FilledButton(
+                  onPressed: () {
+                    _onLoginPressed(AssuranceType.liveness);
+                  },
+                  child: const Text('Login with Liveness Assurance'),
+                ),
+                if (_user != null) ...[
+                  const Text('You have successfully authenticated', textAlign: TextAlign.center),
+                  const SizedBox(height: 5),
+                  Text('Firebase UID: ${_user!.uid}', textAlign: TextAlign.center),
+                  const SizedBox(height: 15),
+                  FilledButton(onPressed: () => FirebaseAuth.instance.signOut(), child: const Text('Sign out')),
+                ]
               ],
             );
           }),
@@ -74,12 +104,27 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Future<void> _onRegisterPressed() async {
+  Future<void> _onLoginPressed(AssuranceType assuranceType) async {
     setState(() => isLoading = true);
 
-    final userId = const UuidV4().generate();
+    final stream = FirebaseAuth.instance.iProov(extensionId: 'auth-iproov-3262').signIn(
+          context: context,
+          assuranceType: assuranceType,
+          userId: _userIdController.text,
+        );
 
-    final stream = FirebaseAuth.instance.iProov(region: 'europe-west2').createUser(userId: userId, context: context);
+    return _handleIProov(stream);
+  }
+
+  Future<void> _onRegisterPressed(AssuranceType assuranceType) async {
+    setState(() => isLoading = true);
+
+    final stream = FirebaseAuth.instance.iProov(extensionId: 'auth-iproov-3262').createUser(
+          context: context,
+          assuranceType: assuranceType,
+          userId: _userIdController.text,
+        );
+
     return _handleIProov(stream);
   }
 
