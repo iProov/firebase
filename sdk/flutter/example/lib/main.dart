@@ -107,7 +107,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> _onLoginPressed(AssuranceType assuranceType) async {
     setState(() => isLoading = true);
 
-    final stream = FirebaseAuth.instance.iProov(extensionId: 'auth-iproov-3262').signIn(
+    final stream = FirebaseAuth.instance.iProov().signIn(
           context: context,
           assuranceType: assuranceType,
           userId: _userIdController.text,
@@ -119,7 +119,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> _onRegisterPressed(AssuranceType assuranceType) async {
     setState(() => isLoading = true);
 
-    final stream = FirebaseAuth.instance.iProov(extensionId: 'auth-iproov-3262').createUser(
+    final stream = FirebaseAuth.instance.iProov().createUser(
           context: context,
           assuranceType: assuranceType,
           userId: _userIdController.text,
@@ -132,14 +132,14 @@ class _HomePageState extends State<HomePage> {
     try {
       final event = await stream.last;
       switch (event) {
-        case IProovEventUserDeclinedPrivacyPolicy _:
+        case IProovFirebaseEventUserDeclinedPrivacyPolicy _:
           _presentError(
             title: 'Privacy Policy Declined',
             message: "You must accept the privacy policy to sign in with iProov.",
           );
           break;
         case IProovEventFailure failure:
-          _presentError(title: 'IProov Failed', message: failure.reason);
+          _presentError(title: 'iProov Failed', message: failure.reason);
           break;
         case IProovEventError event:
           _presentError(title: event.error.title, message: event.error.message);

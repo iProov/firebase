@@ -8,19 +8,17 @@ import 'package:iproov_flutter/iproov_flutter.dart';
 
 export 'package:iproov_flutter/events.dart';
 
-/// Successful Firebase Authentication event
-class IProovEventAuthenticationSuccess implements IProovEvent {
-  /// Firebase user credential
+class IProovFirebaseEventAuthenticationSuccess implements IProovEvent {
   final UserCredential credential;
 
-  const IProovEventAuthenticationSuccess(this.credential);
+  const IProovFirebaseEventAuthenticationSuccess(this.credential);
 
   @override
   bool get isFinal => true;
 }
 
-class IProovEventUserDeclinedPrivacyPolicy implements IProovEvent {
-  const IProovEventUserDeclinedPrivacyPolicy();
+class IProovFirebaseEventUserDeclinedPrivacyPolicy implements IProovEvent {
+  const IProovFirebaseEventUserDeclinedPrivacyPolicy();
 
   @override
   bool get isFinal => true;
@@ -43,6 +41,7 @@ extension IProovFirebaseAuthExtension on FirebaseAuth {
 
 class IProovFirebaseAuth {
   static const _defaultExtensionId = 'auth-iproov';
+
   final String extensionId;
   final FirebaseFunctions functions;
   final FirebaseAuth auth;
@@ -61,7 +60,7 @@ class IProovFirebaseAuth {
 
   Stream<IProovEvent> createUser({
     required BuildContext context,
-    String? userId,
+    required String userId,
     AssuranceType assuranceType = AssuranceType.genuinePresence,
     Options options = const Options(),
   }) =>
@@ -69,7 +68,7 @@ class IProovFirebaseAuth {
 
   Stream<IProovEvent> _launchIProov(
     BuildContext context,
-    String? userId,
+    String userId,
     AssuranceType assuranceType,
     ClaimType claimType,
     Options options,
@@ -93,7 +92,7 @@ class IProovFirebaseAuth {
           false;
 
       if (!didAccept) {
-        yield const IProovEventUserDeclinedPrivacyPolicy();
+        yield const IProovFirebaseEventUserDeclinedPrivacyPolicy();
         return;
       }
     }
@@ -112,12 +111,16 @@ class IProovFirebaseAuth {
           token: token,
           claimType: claimType,
         );
-        yield IProovEventAuthenticationSuccess(credential);
+        yield IProovFirebaseEventAuthenticationSuccess(credential);
       }
     }
   }
 
-  Future<UserCredential> _validateUser({String? userId, required String token, required ClaimType claimType}) async {
+  Future<UserCredential> _validateUser({
+    required String userId,
+    required String token,
+    required ClaimType claimType,
+  }) async {
     final response = await functions.httpsCallable('ext-$extensionId-validate')(
       {
         'userId': userId,
