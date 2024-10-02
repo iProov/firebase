@@ -2,7 +2,26 @@
 
 [Supported roles for Firebase Extensions](https://firebase.google.com/docs/extensions/publishers/access#supported-roles) does not currently include `projects.serviceAccounts.signJwt` which is required for this Extension to work.
 
-Therefore, you must complete the following manual steps to finalize the Extension setup process:
+Therefore, you must complete the following manual steps to finalize the Extension setup process, using either the `gcloud` CLI tool (recommended), or manually with the Google Cloud Console web interface.
+
+## Using `gcloud` CLI (recommended)
+
+1. If you haven't already, install the Google Cloud SDK and login to your Google account (you can skip this step if `gcloud` is already setup on your machine):
+
+    ```sh
+    brew install gcloud
+    gcloud login
+    ```
+
+2. Execute the following:
+
+    ```sh
+    gcloud projects add-iam-policy-binding ${param:PROJECT_ID} --member=serviceAccount:ext-${param:EXT_INSTANCE_ID}@${param:PROJECT_ID}.iam.gserviceaccount.com --role=roles/iam.serviceAccountTokenCreator
+    ```
+
+3. Wait a few minutes for the changes to fully propagate.
+
+## Using the Google Cloud Console
 
 1. [Open the Google Cloud Console IAM Admin page](https://console.cloud.google.com/iam-admin/iam).
 

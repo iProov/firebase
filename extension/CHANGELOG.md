@@ -1,6 +1,6 @@
 ## Version 0.3.0
 
-- Added Terms of Service
+- Added iProov Firebase Extension Terms of Use, Acceptable Use & Data Processing Addendum
 
 ## Version 0.2.0
 
