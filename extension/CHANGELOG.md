@@ -1,3 +1,7 @@
+## Version 0.3.0
+
+- Added iProov Firebase Extension Terms of Use, Acceptable Use & Data Processing Addendum
+
 ## Version 0.2.0
 
 - Support for defined assurance types
