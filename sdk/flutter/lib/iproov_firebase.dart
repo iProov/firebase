@@ -84,7 +84,7 @@ class IProovFirebaseAuth {
 
     final region = data['region'];
     final token = data['token'];
-    final privacyPolicyUrl = Uri.tryParse(data['privacyPolicyUrl']);
+    final privacyPolicyUrl = data['privacyPolicyUrl'] != null ? Uri.tryParse(data['privacyPolicyUrl']) : null;
 
     if (privacyPolicyUrl != null && context.mounted) {
       final didAccept = await Navigator.of(context).push(
