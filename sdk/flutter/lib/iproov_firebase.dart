@@ -2,16 +2,23 @@ library iproov_firebase;
 
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:iproov_firebase/privacy_policy_page.dart';
 import 'package:iproov_flutter/iproov_flutter.dart';
 
 export 'package:iproov_flutter/events.dart';
 
-/// Successful Firebase Authentication event
-class IProovEventAuthenticationSuccess implements IProovEvent {
-  /// Firebase user credential
+class IProovFirebaseEventAuthenticationSuccess implements IProovEvent {
   final UserCredential credential;
 
-  const IProovEventAuthenticationSuccess(this.credential);
+  const IProovFirebaseEventAuthenticationSuccess(this.credential);
+
+  @override
+  bool get isFinal => true;
+}
+
+class IProovFirebaseEventUserDeclinedPrivacyPolicy implements IProovEvent {
+  const IProovFirebaseEventUserDeclinedPrivacyPolicy();
 
   @override
   bool get isFinal => true;
@@ -34,6 +41,7 @@ extension IProovFirebaseAuthExtension on FirebaseAuth {
 
 class IProovFirebaseAuth {
   static const _defaultExtensionId = 'auth-iproov';
+
   final String extensionId;
   final FirebaseFunctions functions;
   final FirebaseAuth auth;
@@ -43,21 +51,24 @@ class IProovFirebaseAuth {
         extensionId = extensionId ?? _defaultExtensionId;
 
   Stream<IProovEvent> signIn({
+    required BuildContext context,
     required String userId,
     AssuranceType assuranceType = AssuranceType.genuinePresence,
     Options options = const Options(),
   }) =>
-      _doIProov(userId, assuranceType, ClaimType.verify, options);
+      _launchIProov(context, userId, assuranceType, ClaimType.verify, options);
 
   Stream<IProovEvent> createUser({
-    String? userId,
+    required BuildContext context,
+    required String userId,
     AssuranceType assuranceType = AssuranceType.genuinePresence,
     Options options = const Options(),
   }) =>
-      _doIProov(userId, assuranceType, ClaimType.enrol, options);
+      _launchIProov(context, userId, assuranceType, ClaimType.enrol, options);
 
-  Stream<IProovEvent> _doIProov(
-    String? userId,
+  Stream<IProovEvent> _launchIProov(
+    BuildContext context,
+    String userId,
     AssuranceType assuranceType,
     ClaimType claimType,
     Options options,
@@ -72,6 +83,19 @@ class IProovFirebaseAuth {
 
     final region = data['region'];
     final token = data['token'];
+    final privacyPolicyUrl = data['privacyPolicyUrl'] != null ? Uri.tryParse(data['privacyPolicyUrl']) : null;
+
+    if (privacyPolicyUrl != null && context.mounted) {
+      final didAccept = await Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => PrivacyPolicyPage(url: privacyPolicyUrl), fullscreenDialog: true),
+          ) ??
+          false;
+
+      if (!didAccept) {
+        yield const IProovFirebaseEventUserDeclinedPrivacyPolicy();
+        return;
+      }
+    }
 
     final stream = IProov.launch(
       streamingUrl: 'wss://$region.rp.secure.iproov.me/ws',
@@ -87,12 +111,16 @@ class IProovFirebaseAuth {
           token: token,
           claimType: claimType,
         );
-        yield IProovEventAuthenticationSuccess(credential);
+        yield IProovFirebaseEventAuthenticationSuccess(credential);
       }
     }
   }
 
-  Future<UserCredential> _validateUser({String? userId, required String token, required ClaimType claimType}) async {
+  Future<UserCredential> _validateUser({
+    required String userId,
+    required String token,
+    required ClaimType claimType,
+  }) async {
     final response = await functions.httpsCallable('ext-$extensionId-validate')(
       {
         'userId': userId,

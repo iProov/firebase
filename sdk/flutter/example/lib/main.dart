@@ -27,17 +27,20 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   StreamSubscription? _subscription;
+  final _userIdController = TextEditingController();
 
   @override
   void initState() {
     _subscription = FirebaseAuth.instance.authStateChanges().listen((event) => setState(() => _user = event));
+    _userIdController.text = const UuidV4().generate();
     super.initState();
   }
 
   @override
   void dispose() {
-    super.dispose();
     _subscription?.cancel();
+    _userIdController.dispose();
+    super.dispose();
   }
 
   User? _user;
@@ -46,24 +49,53 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Firebase Auth Example')),
+      appBar: AppBar(title: const Text('iProov Firebase Flutter SDK Example App')),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 15),
         child: Center(
           child: Builder(builder: (context) {
             if (isLoading) return const CircularProgressIndicator.adaptive();
 
-            if (_user == null) return FilledButton(onPressed: _onRegisterPressed, child: const Text('Enrol'));
-
             return Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const Text('You have successfully authenticated', textAlign: TextAlign.center),
-                const SizedBox(height: 5),
-                Text('Firebase UID: ${_user!.uid}', textAlign: TextAlign.center),
-                const SizedBox(height: 15),
-                FilledButton(onPressed: () => FirebaseAuth.instance.signOut(), child: const Text('Sign out')),
+                TextFormField(
+                  controller: _userIdController,
+                  decoration: const InputDecoration(
+                    border: UnderlineInputBorder(),
+                    labelText: 'User ID',
+                  ),
+                ),
+                FilledButton(
+                  onPressed: () {
+                    _onRegisterPressed(AssuranceType.genuinePresence);
+                  },
+                  child: const Text('Register with Genuine Presence Assurance'),
+                ),
+                FilledButton(
+                  onPressed: () {
+                    _onRegisterPressed(AssuranceType.liveness);
+                  },
+                  child: const Text('Register with Liveness Assurance'),
+                ),
+                FilledButton(
+                  onPressed: () {
+                    _onLoginPressed(AssuranceType.genuinePresence);
+                  },
+                  child: const Text('Login with Genuine Presence Assurance'),
+                ),
+                FilledButton(
+                  onPressed: () {
+                    _onLoginPressed(AssuranceType.liveness);
+                  },
+                  child: const Text('Login with Liveness Assurance'),
+                ),
+                if (_user != null) ...[
+                  const Text('You have successfully authenticated', textAlign: TextAlign.center),
+                  const SizedBox(height: 5),
+                  Text('Firebase UID: ${_user!.uid}', textAlign: TextAlign.center),
+                  const SizedBox(height: 15),
+                  FilledButton(onPressed: () => FirebaseAuth.instance.signOut(), child: const Text('Sign out')),
+                ]
               ],
             );
           }),
@@ -72,11 +104,26 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Future<void> _onRegisterPressed() async {
+  Future<void> _onLoginPressed(AssuranceType assuranceType) async {
     setState(() => isLoading = true);
 
-    final userId = const UuidV4().generate();
-    final stream = FirebaseAuth.instance.iProov().createUser(userId: userId);
+    final stream = FirebaseAuth.instance.iProov().signIn(
+          context: context,
+          assuranceType: assuranceType,
+          userId: _userIdController.text,
+        );
+
+    return _handleIProov(stream);
+  }
+
+  Future<void> _onRegisterPressed(AssuranceType assuranceType) async {
+    setState(() => isLoading = true);
+
+    final stream = FirebaseAuth.instance.iProov().createUser(
+          context: context,
+          assuranceType: assuranceType,
+          userId: _userIdController.text,
+        );
 
     return _handleIProov(stream);
   }
@@ -84,18 +131,32 @@ class _HomePageState extends State<HomePage> {
   Future<void> _handleIProov(Stream<IProovEvent> stream) async {
     try {
       final event = await stream.last;
-      if (event is IProovEventError) {
-        _presentError(title: event.error.title, message: event.error.message);
-      } else if (event is IProovEventFailure) {
-        _presentError(title: 'IProov Failed', message: event.reason);
+      switch (event) {
+        case IProovFirebaseEventUserDeclinedPrivacyPolicy _:
+          _presentError(
+            title: 'Privacy Policy Declined',
+            message: "You must accept the privacy policy to sign in with iProov.",
+          );
+          break;
+        case IProovEventFailure failure:
+          _presentError(title: 'iProov Failed', message: failure.reason);
+          break;
+        case IProovEventError event:
+          _presentError(title: event.error.title, message: event.error.message);
+          break;
+      }
+    } on FirebaseException catch (e) {
+      if (e.code == 'NOT_FOUND') {
+        _presentError(
+            title: 'Function not setup',
+            message:
+                'Please check you have installed the Firebase extension to the correct project and specified the correct region.');
       }
     } catch (e) {
       _presentError(title: 'Unknown Error', message: e.toString());
     }
 
-    if (isLoading) {
-      setState(() => isLoading = false);
-    }
+    if (isLoading) setState(() => isLoading = false);
   }
 
   void _presentError({required String title, String? message}) => showAdaptiveDialog(

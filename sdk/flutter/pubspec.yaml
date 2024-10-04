@@ -13,7 +13,10 @@ dependencies:
     sdk: flutter
 
   # iProov Flutter
-  iproov_flutter: ^4.0.1
+  iproov_flutter: ^5.0.2
+
+  # Webview for Privacy Policy
+  webview_flutter: ^4.2.1
 
   # Firebase
   firebase_auth: ^4.16.0
