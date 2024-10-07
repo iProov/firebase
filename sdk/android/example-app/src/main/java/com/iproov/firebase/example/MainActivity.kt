@@ -1,7 +1,8 @@
-package com.iproov.firebase.example_app
+package com.iproov.firebase.example
 
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.Arrangement
@@ -96,13 +97,13 @@ class MainActivity : AppCompatActivity() {
                 iProovEvents,
                 assuranceType,
                 IProov.Options().apply { title = "Firebase Auth Example" }
-            ).addOnCompleteListener { task ->
-                if (task.result?.user != null) {
-                    Log.i("iProov", "User created successfully")
-                } else {
-                    Log.e("iProov", "Error: ${task.exception?.message}")
-                }
-
+            ).addOnSuccessListener { authResult ->
+                Log.i("iProov", "User registered successfully with ID: ${authResult.user?.uid}")
+                Toast.makeText(this, "User registered successfully", Toast.LENGTH_SHORT).show()
+                setState(pageState.copy(loadingMessage = null))
+            }.addOnFailureListener { e ->
+                Log.e("iProov", "Error: ${e.message}")
+                Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
                 setState(pageState.copy(loadingMessage = null))
             }
     }
@@ -119,13 +120,13 @@ class MainActivity : AppCompatActivity() {
                 iProovEvents,
                 assuranceType,
                 IProov.Options().apply { title = "Firebase Auth Example" }
-            ).addOnCompleteListener { task ->
-                if (task.result?.user != null) {
-                    Log.i("iProov", "User signed in successfully")
-                } else {
-                    Log.e("iProov", "Error: ${task.exception?.message}")
-                }
-
+            ).addOnSuccessListener { authResult ->
+                Log.i("iProov", "User signed in with ID: ${authResult.user?.uid}")
+                Toast.makeText(this, "User logged in successfully", Toast.LENGTH_SHORT).show()
+                setState(pageState.copy(loadingMessage = null))
+            }.addOnFailureListener { e ->
+                Log.e("iProov", "Error: ${e.message}")
+                Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
                 setState(pageState.copy(loadingMessage = null))
             }
     }

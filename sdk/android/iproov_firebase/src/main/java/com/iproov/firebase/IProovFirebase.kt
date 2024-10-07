@@ -121,7 +121,7 @@ class IProovFirebaseAuth(
                     dialog.show(activity.supportFragmentManager, "PrivacyPolicyActivity")
 
                 } else {
-                    // No privacy policy, directly launch IProov
+                    // No privacy policy, directly launch iProov
                     launchIProov(
                         activity,
                         region,
