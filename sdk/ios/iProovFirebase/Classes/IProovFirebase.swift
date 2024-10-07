@@ -23,13 +23,15 @@ enum ClaimType: String {
     case enrol, verify
 }
 
-struct IProovFailure: Error {
-    let result: FailureResult
+public struct IProovFailure: Error {
+    public let result: FailureResult
 }
 
+public struct IProovPrivacyPolicyDeclined: Error {}
+
 public struct IProovProgress {
-    let progress: Double
-    let message: String
+    public let progress: Double
+    public let message: String
 }
 
 public final class IProovAuth {
@@ -57,7 +59,7 @@ public final class IProovAuth {
                            progressCallback: IProovProgressCallback? = nil,
                            completion: AuthCallback?) {
         
-        doIProov(userID: userID,
+        getTokenAndLaunchIProov(userID: userID,
                  claimType: ClaimType.enrol,
                  assuranceType: assuranceType,
                  options: options,
@@ -71,7 +73,7 @@ public final class IProovAuth {
                        progressCallback: IProovProgressCallback? = nil,
                        completion: AuthCallback?) {
         
-        doIProov(userID: userID,
+        getTokenAndLaunchIProov(userID: userID,
                  claimType: ClaimType.verify,
                  assuranceType: assuranceType,
                  options: options,
@@ -80,13 +82,13 @@ public final class IProovAuth {
         
     }
     
-    private func doIProov(userID: String,
-                          claimType: ClaimType,
-                          assuranceType: AssuranceType,
-                          options: Options?,
-                          progressCallback: IProovProgressCallback?,
-                          completion: AuthCallback?) {
-        
+    private func getTokenAndLaunchIProov(userID: String,
+                                         claimType: ClaimType,
+                                         assuranceType: AssuranceType,
+                                         options: Options?,
+                                         progressCallback: IProovProgressCallback?,
+                                         completion: AuthCallback?) {
+
         functions.httpsCallable("ext-\(extensionID)-getToken").call([
             "userId": userID,
             "claimType": claimType.rawValue,
@@ -102,36 +104,31 @@ public final class IProovAuth {
             
             let region = response["region"] as! String
             let token = response["token"] as! String
-            
-            IProov.launch(streamingURL: URL(string: "wss://\(region).rp.secure.iproov.me/ws")!,
-                          token: token,
-                          options: options ?? Options()) { status in
-                
-                switch status {
-                case .connecting:
-                    break // Do nothing
-                    
-                case .connected:
-                    break // Do nothing
-                    
-                case let .processing(progress, message):
-                    progressCallback?(IProovProgress(progress: progress, message: message))
-                    
-                case let .error(error):
-                    completion?(nil, error)
-                    
-                case .canceled:
-                    completion?(nil, nil)
-                    
-                case let .failure(reason):
-                    completion?(nil, IProovFailure(result: reason))
-                    
-                case .success:
-                    self.validate(userID: userID,
+
+            let launchIProovWithParameters = {
+                self.launchIProov(region: region,
                                   token: token,
+                                  userID: userID,
                                   claimType: claimType,
+                                  options: options,
+                                  progressCallback: progressCallback,
                                   completion: completion)
+            }
+
+            if let privacyPolicyURLString = response["privacyPolicyUrl"] as? String,
+               let privacyPolicyURL = URL(string: privacyPolicyURLString) {
+
+                let viewController = PrivacyPolicyViewController(url: privacyPolicyURL) { accepted in
+                    if accepted {
+                        launchIProovWithParameters()
+                    } else {
+                        completion?(nil, IProovPrivacyPolicyDeclined())
+                    }
                 }
+
+                viewController.presentModally()
+            } else {
+                launchIProovWithParameters()
             }
         }
     }
@@ -156,7 +153,47 @@ public final class IProovAuth {
             self.auth.signIn(withCustomToken: jwt, completion: completion)
         }
     }
-    
+
+    private func launchIProov(region: String,
+                              token: String,
+                              userID: String,
+                              claimType: ClaimType,
+                              options: Options?,
+                              progressCallback: IProovProgressCallback?,
+                              completion: AuthCallback?) {
+
+        IProov.launch(streamingURL: URL(string: "wss://\(region).rp.secure.iproov.me/ws")!,
+                      token: token,
+                      options: options ?? Options()) { status in
+
+            switch status {
+            case .connecting:
+                break // Do nothing
+
+            case .connected:
+                break // Do nothing
+
+            case let .processing(progress, message):
+                progressCallback?(IProovProgress(progress: progress, message: message))
+
+            case let .error(error):
+                completion?(nil, error)
+
+            case .canceled:
+                completion?(nil, nil)
+
+            case let .failure(reason):
+                completion?(nil, IProovFailure(result: reason))
+
+            case .success:
+                self.validate(userID: userID,
+                              token: token,
+                              claimType: claimType,
+                              completion: completion)
+            }
+        }
+    }
+
 }
 
 public extension Auth {
